@@ -32,6 +32,18 @@ if __name__ == '__main__':
     #setup_initial_users()
 
     app = QApplication(sys.argv)
+    
+    # Cargar la hoja de estilos externa
+    try:
+        # --- AQUÍ ESTÁ LA CORRECCIÓN ---
+        with open("style.qss", "r", encoding="utf-8") as f:
+            style = f.read()
+            app.setStyleSheet(style)
+    except FileNotFoundError:
+        print("Advertencia: No se encontró el archivo 'style.qss'. Usando estilos por defecto.")
+    except Exception as e:
+        print(f"Error al cargar 'style.qss': {e}") # Añadido para mejor depuración
+    
     login_window = LoginWindow()
     login_window.show()
     sys.exit(app.exec())

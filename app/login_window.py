@@ -2,8 +2,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QLineEdit,
                              QPushButton, QMessageBox, QHBoxLayout)
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
-from app.main_window import MainWindow
-from app.auth import verify_user
+from .main_window import MainWindow # <--- CORRECCIÓN AQUÍ
+from .auth import verify_user # <--- CORRECCIÓN AQUÍ
 
 class LoginWindow(QWidget):
     def __init__(self):
@@ -12,7 +12,6 @@ class LoginWindow(QWidget):
         
         self.setWindowTitle("InfinityTech - Inicio de Sesión")
         self.setGeometry(0, 0, 400, 500)
-        self.setStyleSheet(self.get_stylesheet())
 
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -65,46 +64,3 @@ class LoginWindow(QWidget):
         self.main_win = MainWindow(user_role=role)
         self.main_win.show()
         self.close()
-
-    def get_stylesheet(self):
-        return """
-            QWidget {
-                background-color: #2c3e50;
-                font-family: 'Segoe UI', sans-serif;
-                color: #ecf0f1;
-            }
-            QWidget#container {
-                background-color: #34495e;
-                border-radius: 10px;
-            }
-            QLabel {
-                font-size: 14px;
-            }
-            QLabel#title {
-                font-size: 24px;
-                font-weight: bold;
-            }
-            QLineEdit {
-                background-color: #2c3e50;
-                border: 1px solid #34495e;
-                border-radius: 5px;
-                padding: 10px;
-                font-size: 14px;
-                color: white;
-            }
-            QLineEdit:focus {
-                border: 1px solid #3498db;
-            }
-            QPushButton {
-                background-color: #3498db;
-                color: white;
-                font-size: 16px;
-                font-weight: bold;
-                padding: 12px;
-                border-radius: 5px;
-                border: none;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-        """
