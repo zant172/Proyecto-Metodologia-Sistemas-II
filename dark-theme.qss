@@ -1,0 +1,228 @@
+/* Dark Theme */
+QWidget {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #D1D5DB; /* Light Gray */
+    font-size: 14px;
+    outline: none;
+}
+QMainWindow {
+    background-color: #111827; /* Near Black */
+}
+
+/* --- Login Window --- */
+QWidget#loginWindow {
+    background-color: #1F2937; /* Dark Gray Background */
+}
+QWidget#loginContainer {
+    background-color: #1F2937; /* Dark Gray */
+    border-radius: 12px;
+    border: 1px solid #374151; /* Medium Dark Gray Border */
+    padding: 30px;
+    max-width: 380px;
+    margin: auto;
+}
+QLabel#loginTitle {
+    font-size: 24px;
+    font-weight: 700;
+    color: #F9FAFB; /* Near White */
+    margin-bottom: 25px;
+    text-align: center;
+}
+QLabel#loginLabel {
+    color: #9CA3AF; /* Lighter Gray */
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+QLineEdit#loginInput {
+    background-color: #374151; /* Medium Dark Gray */
+    border: 1px solid #4B5563; /* Slightly Lighter Border */
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+    color: #F3F4F6; /* Very Light Gray */
+    margin-bottom: 15px;
+}
+QLineEdit#loginInput:focus {
+    border-color: #60A5FA; /* Light Blue */
+    box-shadow: 0 0 0 1px #60A5FA;
+}
+QPushButton#loginButton {
+    background-color: #3B82F6; /* Blue */
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 6px;
+    border: none;
+    margin-top: 10px;
+}
+QPushButton#loginButton:hover {
+    background-color: #2563EB; /* Darker Blue */
+}
+QPushButton#loginButton:pressed {
+    background-color: #1D4ED8; /* Even Darker Blue */
+}
+
+/* --- Main Window Left Panel --- */
+QWidget#leftPanel {
+    background-color: #1F2937; /* Dark Gray */
+    border: none;
+    border-right: 1px solid #374151;
+}
+QLabel#navBarTitle {
+    font-size: 17px;
+    font-weight: 600;
+    color: #F9FAFB; /* Near White */
+    padding: 20px;
+    border-bottom: 1px solid #374151;
+    min-height: 55px;
+}
+
+/* --- Navigation List --- */
+QListWidget#navBar {
+    background-color: #1F2937;
+    border: none;
+    padding-top: 10px;
+}
+QListWidget#navBar::item {
+    color: #9CA3AF; /* Lighter Gray */
+    padding: 14px 20px;
+    border-left: 4px solid transparent;
+    border-right: none;
+    margin-bottom: 4px;
+}
+QListWidget#navBar::item:hover {
+    background-color: #374151; /* Medium Dark Gray Hover */
+    color: #F9FAFB;
+}
+QListWidget#navBar::item:selected {
+    background-color: #1E3A8A; /* Darker Blue Background */
+    color: #DBEAFE; /* Very Light Blue Text */
+    font-weight: 600;
+    border-left: 4px solid #60A5FA; /* Light Blue Indicator */
+}
+
+/* --- Main Content Area --- */
+QStackedWidget > QWidget {
+    background-color: #111827; /* Near Black */
+    padding: 20px;
+}
+QLabel#pageTitle {
+    font-size: 26px;
+    font-weight: 700;
+    color: #F9FAFB;
+    padding: 5px 0px 15px 0px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #374151;
+}
+
+/* --- Inputs, Combos, Spinners --- */
+QLineEdit, QDoubleSpinBox, QSpinBox, QComboBox, QDateEdit {
+    background-color: #374151; /* Medium Dark Gray */
+    border: 1px solid #4B5563; /* Slightly Lighter Border */
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #F3F4F6;
+    selection-background-color: #2563EB; /* Dark Blue Selection */
+    selection-color: #F9FAFB;
+}
+QLineEdit:focus, QDoubleSpinBox:focus, QSpinBox:focus, QComboBox:focus, QDateEdit:focus {
+    border-color: #60A5FA; /* Light Blue */
+    box-shadow: 0 0 0 1px #60A5FA;
+}
+QComboBox::drop-down { border: none; subcontrol-origin: padding; subcontrol-position: top right; width: 25px; }
+QComboBox::down-arrow { image: url(app/icons/chevron-down-light.svg); width: 14px; height: 14px; }
+QSpinBox::up-button, QSpinBox::down-button,
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button,
+QDateEdit::up-button, QDateEdit::down-button {
+    subcontrol-origin: border; width: 20px; border-left: 1px solid #4B5563; background-color: #374151;
+}
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow, QDateEdit::up-arrow { image: url(app/icons/chevron-up-light.svg); width: 10px; height: 10px;}
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow, QDateEdit::down-arrow { image: url(app/icons/chevron-down-light.svg); width: 10px; height: 10px;}
+
+
+/* --- General Buttons --- */
+QPushButton {
+    background-color: #3B82F6; /* Blue */
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: none;
+    min-height: 22px;
+}
+QPushButton:hover { background-color: #2563EB; }
+QPushButton:pressed { background-color: #1D4ED8; }
+QPushButton:disabled { background-color: #4B5563; color: #6B7280; }
+
+/* Specific Buttons */
+QPushButton#addButton { background-color: #10B981; } /* Green */
+QPushButton#addButton:hover { background-color: #059669; }
+QPushButton#addButton:pressed { background-color: #047857; }
+
+/* --- Tables --- */
+QTableWidget {
+    background-color: #1F2937; /* Dark Gray */
+    border: 1px solid #374151; /* Medium Dark Gray Border */
+    font-size: 13px;
+    border-radius: 8px;
+    gridline-color: #374151;
+    alternate-background-color: #111827; /* Near Black Alternate */
+    selection-background-color: #1E3A8A; /* Dark Blue Selection */
+    selection-color: #DBEAFE; /* Very Light Blue Text */
+}
+QTableWidget::item { padding: 12px; border-bottom: 1px solid #374151; color: #D1D5DB; } /* Light Gray Text */
+QTableWidget::item:selected { background-color: #1D4ED8; color: #F9FAFB; } /* Darker Blue Selection */
+QHeaderView::section {
+    background-color: #374151; /* Header Gray */
+    color: #D1D5DB; /* Light Gray Text */
+    padding: 12px;
+    border: none;
+    border-bottom: 1px solid #4B5563; /* Slightly Lighter Border */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Dashboard Cards --- */
+QWidget#metricCard {
+    background-color: #1F2937; /* Dark Gray */
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 20px;
+}
+QLabel#metricTitle { font-size: 13px; font-weight: 500; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+QLabel#metricValue { font-size: 28px; font-weight: 700; color: #F9FAFB; }
+
+/* --- Table Action Buttons (FIXED SIZE) --- */
+QTableWidget QPushButton {
+    font-size: 11px;
+    padding: 5px 8px;
+    max-width: 65px;
+    min-width: 60px;
+    font-weight: 500;
+    margin: 1px;
+}
+QPushButton#editButton { background-color: #F59E0B; color: white; } /* Amber */
+QPushButton#editButton:hover { background-color: #D97706; }
+QPushButton#deleteButton { background-color: #EF4444; color: white; } /* Red */
+QPushButton#deleteButton:hover { background-color: #DC2626; }
+
+/* --- POS Styles --- */
+QWidget#cartWidget { background-color: #1F2937; border-left: 1px solid #374151; border-radius: 0px; padding: 20px; }
+QLabel#totalLabel { font-size: 18px; font-weight: 600; color: #9CA3AF; margin-top: 20px; }
+QLabel#totalValue { font-size: 24px; font-weight: 700; color: #34D399; margin-top: 20px; } /* Lighter Green */
+QPushButton#finalizeButton { background-color: #10B981; color: #111827; padding: 14px; font-size: 16px; } /* Green */
+QPushButton#finalizeButton:hover { background-color: #059669; }
+QPushButton#cancelButton { background-color: #EF4444; } /* Red */
+QPushButton#cancelButton:hover { background-color: #DC2626; }
+
+/* --- Theme Toggle Button --- */
+QPushButton#themeToggleButton {
+    background-color: transparent; border: none; border-top: 1px solid #374151;
+    padding: 10px; border-radius: 0px; min-height: 28px;
+}
+QPushButton#themeToggleButton:hover { background-color: #374151; }
+QPushButton#themeToggleButton:pressed { background-color: #4B5563; }
