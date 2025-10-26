@@ -1,52 +1,117 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QAbstractItemView
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QTableWidget, QTableWidgetItem,
+                             QHeaderView, QMessageBox, QAbstractItemView)
 from functools import partial
 from ..products import get_all_products, get_product_by_id, delete_product
 from .product_form_dialog import ProductFormDialog
 
 class ProductsPage(QWidget):
     def __init__(self):
-        super().__init__(); layout = QVBoxLayout(self); header_layout = QHBoxLayout()
-        title = QLabel("Gestión de Stock"); title.setObjectName("pageTitle"); header_layout.addWidget(title); header_layout.addStretch()
-        self.add_button = QPushButton("Agregar Producto"); self.add_button.setObjectName("addButton"); header_layout.addWidget(self.add_button)
+        super().__init__()
+        
+        layout = QVBoxLayout(self)
+        
+        header_layout = QHBoxLayout()
+        title = QLabel("Gestión de Stock de Productos")
+        title.setObjectName("pageTitle")
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        
+        self.add_product_button = QPushButton("Agregar Producto")
+        self.add_product_button.setObjectName("addButton")
+        header_layout.addWidget(self.add_product_button)
         layout.addLayout(header_layout)
-        self.table = QTableWidget(); self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels(["ID", "Código", "Nombre", "Categoría", "Precio", "Stock", "Editar", "Eliminar"])
-        self.table.verticalHeader().setVisible(False); self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        header = self.table.horizontalHeader(); header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.setColumnWidth(0, 50); self.table.setColumnWidth(6, 70); self.table.setColumnWidth(7, 70)
-        layout.addWidget(self.table); self.refresh_data(); self.add_button.clicked.connect(self.open_add_dialog)
 
-    def refresh_data(self): self.load_products()
+        self.product_table = QTableWidget()
+        self.product_table.setColumnCount(8) 
+        self.product_table.setHorizontalHeaderLabels([
+            "ID", "Código", "Nombre", "Categoría", "Precio", "Stock", "Editar", "Eliminar"
+        ])
+        self.product_table.verticalHeader().setVisible(False)
+        self.product_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.product_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        
+        self.product_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.product_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.product_table.setColumnWidth(0, 50)
+        self.product_table.setColumnWidth(6, 70)
+        self.product_table.setColumnWidth(7, 70)
+
+        layout.addWidget(self.product_table)
+        
+        self.refresh_data()
+        
+        self.add_product_button.clicked.connect(self.open_add_dialog)
+    
+    def refresh_data(self):
+        self.load_products()
 
     def load_products(self):
         products, error = get_all_products()
-        if error: QMessageBox.critical(self, "Error DB", f"No se cargaron productos:\n{error}"); self.table.setRowCount(0); return
-        self.table.setRowCount(len(products))
-        for r, data in enumerate(products):
-            pid = data[0]
-            for c, value in enumerate(data):
-                item = QTableWidgetItem(f"${value:.2f}" if c == 4 else str(value)); self.table.setItem(r, c, item)
-            self.setup_buttons(r, pid)
+        
+        if error:
+            QMessageBox.critical(self, "Error de Base de Datos", 
+                                 f"No se pudieron cargar los productos:\n{error}")
+            self.product_table.setRowCount(0)
+            return
+            
+        self.product_table.setRowCount(len(products))
+        
+        for row_idx, row_data in enumerate(products):
+            product_id = row_data[0]
+            
+            for col_idx, col_data in enumerate(row_data):
+                item = QTableWidgetItem(str(col_data))
+                if col_idx == 4:
+                    item.setText(f"${col_data:.2f}")
+                self.product_table.setItem(row_idx, col_idx, item)
+            
+            self.setup_table_buttons(row_idx, product_id)
 
-    def setup_buttons(self, row, pid):
-        edit_btn = QPushButton("Editar"); edit_btn.setObjectName("editButton"); edit_btn.clicked.connect(partial(self.open_edit_dialog, pid))
-        del_btn = QPushButton("Eliminar"); del_btn.setObjectName("deleteButton"); del_btn.clicked.connect(partial(self.handle_delete, pid))
-        self.table.setCellWidget(row, 6, edit_btn); self.table.setCellWidget(row, 7, del_btn)
+    def setup_table_buttons(self, row, product_id):
+        edit_button = QPushButton("Editar")
+        edit_button.setObjectName("editButton")
+        edit_button.clicked.connect(partial(self.open_edit_dialog, product_id))
+        self.product_table.setCellWidget(row, 6, edit_button) 
 
-    def open_add_dialog(self): ProductFormDialog(on_success=self.refresh_data, parent=self).exec()
+        delete_button = QPushButton("Eliminar")
+        delete_button.setObjectName("deleteButton")
+        delete_button.clicked.connect(partial(self.handle_delete, product_id))
+        self.product_table.setCellWidget(row, 7, delete_button)
 
-    def open_edit_dialog(self, pid):
-        data, error = get_product_by_id(pid)
-        if error or not data: QMessageBox.critical(self, "Error", f"No se cargaron datos del producto: {error}"); return
-        class ProductData: idProducto=pid; Codigo=data[0]; NombreProducto=data[1]; idCategoria=data[2]; Precio=data[3]; Stock=data[4]
-        ProductFormDialog(product_data=ProductData, on_success=self.refresh_data, parent=self).exec()
+    def open_add_dialog(self):
+        dialog = ProductFormDialog(on_success=self.refresh_data, parent=self)
+        dialog.exec()
 
-    def handle_delete(self, pid):
-        if QMessageBox.question(self, "Confirmar", "¿Eliminar producto?") == QMessageBox.StandardButton.Yes:
-            success, msg = delete_product(pid)
-            (QMessageBox.information if success else QMessageBox.critical)(self, "Resultado", msg)
-            if success: self.refresh_data()
+    def open_edit_dialog(self, product_id):
+        product_data, error = get_product_by_id(product_id)
+        if error or not product_data:
+            QMessageBox.critical(self, "Error", f"No se pudieron cargar los datos del producto: {error}")
+            return
+        
+        full_product_data = (product_id,) + product_data
+        
+        class ProductData:
+            def __init__(self, data):
+                self.idProducto = data[0]
+                self.Codigo = data[1]
+                self.NombreProducto = data[2]
+                self.idCategoria = data[3]
+                self.Precio = data[4]
+                self.Stock = data[5]
 
-    def update_theme(self, is_dark): pass
+        dialog = ProductFormDialog(product_data=ProductData(full_product_data), on_success=self.refresh_data, parent=self)
+        dialog.exec()
+
+    def handle_delete(self, product_id):
+        confirm = QMessageBox.question(self, "Confirmar eliminación",
+                                       "¿Está seguro de que desea eliminar este producto?",
+                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        
+        if confirm == QMessageBox.StandardButton.Yes:
+            success, message = delete_product(product_id)
+            if success:
+                QMessageBox.information(self, "Éxito", message)
+                self.refresh_data()
+            else:
+                QMessageBox.critical(self, "Error", message)
