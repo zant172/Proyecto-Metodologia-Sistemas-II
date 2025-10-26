@@ -128,8 +128,8 @@ QLabel#metricValue {
 QPushButton#editButton {
     background-color: #F39C12;
     color: white;
-    font-size: 12px;
-    padding: 5px;
+    font-size: 10px;
+    padding: 1px 0px;
     border-radius: 3px;
 }
 QPushButton#editButton:hover {
@@ -138,8 +138,8 @@ QPushButton#editButton:hover {
 QPushButton#deleteButton {
     background-color: #E74C3C;
     color: white;
-    font-size: 12px;
-    padding: 5px;
+    font-size: 10px;
+    padding: 1px 0px;
     border-radius: 3px;
 }
 QPushButton#deleteButton:hover {

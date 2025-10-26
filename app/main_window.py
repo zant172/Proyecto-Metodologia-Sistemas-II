@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, 
                              QListWidget, QStackedWidget, QListWidgetItem)
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt
 
 from .pages.dashboard_page import DashboardPage
 from .pages.products_page import ProductsPage
@@ -26,7 +25,6 @@ class MainWindow(QMainWindow):
 
         self.nav_bar = QListWidget()
         self.nav_bar.setFixedWidth(200)
-        self.nav_bar.setIconSize(QSize(24, 24))
         self.nav_bar.setObjectName("navBar")
         main_layout.addWidget(self.nav_bar)
 
@@ -43,29 +41,21 @@ class MainWindow(QMainWindow):
     def create_pages(self):
         
         self.pages_config = {
-            "Inicio": (DashboardPage, "app/icons/home.svg"),
-            "Productos": (ProductsPage, "app/icons/package.svg"),
-            "Punto de Venta": (SalesPage, "app/icons/shopping-cart.svg"),
-            "Gestión de Usuarios": (UsersPage, "app/icons/users.svg"),
-            "Reportes": (ReportsPage, "app/icons/bar-chart-2.svg")
+            "🏠 Inicio": DashboardPage,
+            "📦 Productos": ProductsPage,
+            "🛒 Punto de Venta": SalesPage,
+            "👥 Gestión de Usuarios": UsersPage,
+            "📊 Reportes": ReportsPage
         }
 
-        for name, (PageWidgetClass, icon_path) in self.pages_config.items():
+        for name, PageWidgetClass in self.pages_config.items():
+            
             item = QListWidgetItem(name)
             
-            try:
-                icon = QIcon(icon_path)
-                if not icon.isNull():
-                    item.setIcon(icon)
-                else:
-                    print(f"Advertencia: No se pudo cargar el ícono: {icon_path}")
-            except Exception as e:
-                print(f"Error al cargar ícono {icon_path}: {e}")
-                
             item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
             self.nav_bar.addItem(item)
             
-            if name == "Punto de Venta":
+            if name == "🛒 Punto de Venta":
                 page = PageWidgetClass(user_id=self.user_id)
             else:
                 page = PageWidgetClass()
@@ -84,5 +74,6 @@ class MainWindow(QMainWindow):
         if self.user_role == 'Usuario':
             for i in range(self.nav_bar.count()):
                 item = self.nav_bar.item(i)
-                if item.text() in ["Gestión de Usuarios", "Reportes"]:
+                
+                if item.text() in ["👥 Gestión de Usuarios", "📊 Reportes"]:
                     item.setHidden(True)

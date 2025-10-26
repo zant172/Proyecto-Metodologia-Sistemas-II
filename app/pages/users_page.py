@@ -32,10 +32,8 @@ class UsersPage(QWidget):
         self.user_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         
         self.user_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.user_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.user_table.setColumnWidth(0, 50)
-        self.user_table.setColumnWidth(4, 70)
-        self.user_table.setColumnWidth(5, 70)
+        self.user_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        self.user_table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
 
         layout.addWidget(self.user_table)
         

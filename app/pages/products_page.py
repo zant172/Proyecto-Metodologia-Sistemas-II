@@ -32,10 +32,8 @@ class ProductsPage(QWidget):
         self.product_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         
         self.product_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.product_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.product_table.setColumnWidth(0, 50)
-        self.product_table.setColumnWidth(6, 70)
-        self.product_table.setColumnWidth(7, 70)
+        self.product_table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
+        self.product_table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)
 
         layout.addWidget(self.product_table)
         
