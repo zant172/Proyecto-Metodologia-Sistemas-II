@@ -109,59 +109,43 @@ Diseña, programa, prueba y documenta los módulos del sistema.
 
  
 
+Plan de Proyecto - 5 Sprints (21 de Octubre - 18 de Noviembre)
 
-Cronograma Inicial (en Sprints)
-Duración total estimada: 16 semanas
-Metodología: Scrum (sprints de 2 a 3 semanas)
-
-Sprint 1 (Semanas 1-2): Inicio del Proyecto y Definición del Tema
-●Objetivo del Sprint: Formalizar el alcance, los objetivos y la planificación inicial del proyecto. Establecer las herramientas de gestión y el entorno   de trabajo.
-●Entregables:
-○Acta de Constitución del Proyecto (Project Charter): Un documento formal que define el problema, los objetivos, el alcance, los stakeholders (profesor, equipo) y las principales funcionalidades.
-○Configuración del Repositorio: Repositorio en GitHub creado, con la estructura de carpetas inicial.
-○Tablero de Trello: Creado y poblado con las tarjetas iniciales de las épicas y sprints.
-○Definición de la Pila Tecnológica: Documento que oficializa el uso de Python, PyQt6, SQL Server, etc.
- Sprint 2 (Semanas 3-4): Análisis y Diseño del Sistema
-●Objetivo del Sprint: Crear los "planos" del sistema antes de comenzar la construcción. Definir la arquitectura de la base de datos y el diseño visual de la aplicación.
-●Entregables:
-○Diagrama Entidad-Relación (ERD): El diseño visual final de la base de datos, mostrando todas las tablas, columnas y sus relaciones.
-○Diccionario de Datos: Un documento que describe cada tabla y columna de la base de datos.
-○Wireframes o Mockups de la Interfaz (UI): Bocetos o diseños de baja/media fidelidad de las pantallas principales (Login, Ventana Principal, Stock, Ventas).
-○Casos de Uso: Descripción detallada de las interacciones clave del usuario con el sistema (ej."Caso de Uso: Realizar una Venta").
- Sprint 3 (Semanas 5-6): Fundación Técnica y Autenticación
-●Objetivo del Sprint: Construir la base técnica del proyecto y entregar la primera funcionalidad tangible: un sistema de login seguro.
-●Entregables:
-Base de Datos Funcional: El script SQL ejecutado en SQL Server.
-Módulos de Backend (database.py, auth.py): Código funcional para la conexión y la autenticación segura (hashing y verificación).
-Ventana de Login Funcional: Interfaz gráfica que valida las credenciales del usuario contra la base de datos.
-Ventana Principal Básica: Una ventana que se abre tras un login exitoso y muestra el rol del usuario.
- Sprint 4 (Semanas 7-8): Gestión de Inventario (CRUD de Productos)
-●Objetivo del Sprint: Implementar la funcionalidad completa para que los administradores puedan gestionar el catálogo de productos.
-●Entregables:
-Módulo de "Stock" funcional: Una sección en la app que muestra los productos en una tabla.
-Formularios de Creación y Edición: Ventanas emergentes para agregar nuevos productos o modificar los existentes.
-Control de Acceso Implementado: Los usuarios con rol "Usuario" pueden ver el stock, pero los botones para "Agregar" y "Editar" están deshabilitados u ocultos.
-Sprint 5 (Semanas 9-10): Módulo de Punto de Venta (POS)
-●Objetivo del Sprint: Desarrollar la funcionalidad de ventas, el corazón operativo del sistema.
-●Entregables:
-Módulo de "Ventas" funcional: Una interfaz con un buscador de productos y un carrito de compras.
-Lógica de Transacción: Al finalizar una venta, el stock en la base de datos se actualiza correctamente.
-Registro de Ventas: Cada venta se guarda correctamente en las tablas Ventas y DetalleVentas.
- Sprint 6 (Semanas 11-12): Gestión de Usuarios y Reportes
-● Objetivo del Sprint: Añadir las funcionalidades administrativas clave para la gestión de personal y el análisis de negocio.
-
-
-●Entregables:
-Módulo de "Gestión de Usuarios" funcional: Interfaz (visible solo para Admins) para crear nuevas cuentas de empleados (con rol "Usuario").
-Módulo de "Reportes" básico: Una sección (visible solo para Admins) que muestra un reporte de ventas por fecha.
-Sprint 7 (Semanas 13-14): Pruebas, Empaquetado y Refinamiento
-●Objetivo del Sprint: Asegurar la calidad del software, corregir errores y crear una versión distribuible del programa.
-●Entregables:
-Informe de Pruebas: Un documento con los casos de prueba ejecutados y los bugs encontrados y solucionados.
-Aplicación Compilada (.exe): Un archivo ejecutable creado con PyInstaller, listo para ser instalado en otra computadora.
-Refinamiento de la Interfaz (UI/UX): Mejoras visuales y de usabilidad basadas en la retroalimentación.
-Sprint 8 (Semanas 15-16): Documentación Final y Validación
-●Objetivo del Sprint: Completar toda la documentación requerida, preparar la presentación final y obtener la validación del proyecto.
+Sprint 1: Planeación, Diseño y Estructura (21 - 25 de Octubre)
+• Objetivo del Sprint: Formalizar el alcance, las herramientas de gestión y establecer los "planos" conceptuales y físicos del sistema (diseño de la base de datos).
+• Entregables:
+• Acta de Constitución del Proyecto (Project Charter): Define problema, objetivos, alcance, stakeholders y funcionalidades principales.
+• Configuración del Repositorio: Repositorio en GitHub creado y poblado con la estructura de carpetas inicial.
+• Tablero de Trello: Creado y poblado con las tarjetas iniciales de las épicas y los 5 sprints.
+• Definición de la Pila Tecnológica: Documento que oficializa el uso de Python, PyQt6, SQL Server, etc.
+• Diagrama Entidad-Relación (ERD): Diseño visual final de la base de datos, con tablas, columnas y sus relaciones.
+• Diccionario de Datos: Documento que describe cada tabla, columna y tipo de dato de la base de datos.
+Sprint 2: Interfaz, Casos de Uso y Fundación de la DB (28 de Octubre - 1 de Noviembre)
+• Objetivo del Sprint: Definir el diseño visual de la aplicación, detallar las interacciones del usuario y establecer la base de datos funcional en el servidor.
+• Entregables:
+• Wireframes o Mockups de la Interfaz (UI): Bocetos o diseños de baja/media fidelidad de las pantallas clave (Login, Ventana Principal, Stock, Ventas).
+• Casos de Uso: Descripción detallada de las interacciones clave del usuario con el sistema (ej. "Caso de Uso: Realizar una Venta", "Caso de Uso: Gestionar un Producto").
+• Base de Datos Funcional: El script SQL de creación de tablas ejecutado y verificado en SQL Server, listo para ser poblado.
+Sprint 3: Fundación Técnica y Autenticación (4 - 8 de Noviembre)
+• Objetivo del Sprint: Construir la capa de conectividad y seguridad del sistema para entregar la primera funcionalidad tangible: un sistema de login seguro y funcional.
+• Entregables:
+• Módulos de Backend (database.py, auth.py): Código funcional para la conexión a SQL Server y la autenticación segura (hashing y verificación de contraseñas).
+• Ventana de Login Funcional: Interfaz gráfica que valida las credenciales del usuario contra la base de datos.
+• Ventana Principal Básica: Una ventana de bienvenida que se abre tras un login exitoso y muestra el rol del usuario autenticado.
+Sprint 4: Gestión de Inventario (CRUD de Productos) (11 - 15 de Noviembre)
+• Objetivo del Sprint: Implementar la funcionalidad completa para que los administradores puedan gestionar el catálogo de productos (CRUD).
+• Entregables:
+• Módulo de "Stock" funcional: Una sección en la app que muestra la lista de productos en una tabla.
+• Formularios de Creación, Edición y Eliminación: Ventanas emergentes para agregar nuevos productos, modificar los existentes y darlos de baja (soft delete o eliminación).
+• Control de Acceso Implementado: Verificación del rol del usuario. Los botones para "Agregar" y "Editar" productos están deshabilitados u ocultos para usuarios con rol limitado ("Usuario" simple).
+Sprint 5: Módulo de Venta (POS), Usuarios y Reportes (18 de Noviembre)
+• Objetivo del Sprint: Desarrollar el corazón operativo (punto de venta), las funcionalidades administrativas restantes (gestión de personal) y la capa de análisis básico.
+• Entregables:
+• Módulo de "Ventas" funcional: Interfaz con buscador de productos, gestión de cantidades y carrito de compras.
+• Lógica de Transacción: Al finalizar una venta, el stock en la base de datos se actualiza correctamente.
+• Registro de Ventas: Cada venta se guarda correctamente en las tablas Ventas y DetalleVentas.
+• Gestión de Usuarios (CRUD): Implementación de un módulo (solo visible para "Admin") que permite crear, editar y asignar roles a otros usuarios.
+• Reportes/Consultas Básicas: Al menos una vista de reporte simple (ej. Top 10 productos más vendidos o Ventas por rango de fecha).
 ●Entregables:
 Carpeta Final del Proyecto: Un archivo ZIP o una carpeta que contiene:
 ■ Documentación Final:
