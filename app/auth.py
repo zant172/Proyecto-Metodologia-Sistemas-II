@@ -40,6 +40,40 @@ def _execute_query(query, params=(), fetch_one=False, fetch_all=False, commit=Fa
         if conn:
             conn.close()
 
+def ensure_superadmin_exists():
+    print("--- Verificando existencia del Super Admin ---")
+    
+    query_check = "SELECT COUNT(*) FROM Usuarios WHERE idRol = 1"
+    count_data, error = _execute_query(query_check, fetch_one=True)
+    
+    if error:
+        print(f"❌ Error al verificar Super Admin: {error}")
+        return
+    
+    if count_data and count_data[0] > 0:
+        print("✅ Super Admin ya existe. Omitiendo creación.")
+        return
+
+    print("ℹ️  No se encontró Super Admin. Creando cuenta 'sprsjg26'...")
+    
+    username = 'sprsjg26'
+    password = 'superadminpass'
+    full_name = 'Desarrollador del Sistema'
+    role_id = 1
+    
+    hashed = hash_password(password)
+    query_create = """
+        INSERT INTO Usuarios (NombreUsuario, Contrasena, NombreCompleto, idRol, Activo) 
+        VALUES (?, ?, ?, ?, 1)
+    """
+    params = (username, hashed, full_name, role_id)
+    success, error = _execute_query(query_create, params, commit=True)
+    
+    if success:
+        print(f"✅ ¡Cuenta Super Admin '{username}' creada exitosamente!")
+    else:
+        print(f"❌ Error crítico al crear Super Admin: {error}")
+
 def verify_user(username, password):
     query = """
         SELECT u.Contrasena, r.NombreRol, u.idUsuario

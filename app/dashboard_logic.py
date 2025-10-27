@@ -1,7 +1,7 @@
 from .database import get_connection
 from datetime import datetime
 
-def _execute_query(query, params=(), fetch_one=False, fetch_all=False):
+def _execute_query(query, params=(), fetch_one=False, fetch_all=False, commit=False):
     conn = get_connection()
     if not conn:
         return None, "Error: No se pudo conectar a la base de datos."
@@ -14,7 +14,10 @@ def _execute_query(query, params=(), fetch_one=False, fetch_all=False):
             cursor.execute(query)
         
         result = None
-        if fetch_one:
+        if commit:
+            conn.commit()
+            result = True
+        elif fetch_one:
             result = cursor.fetchone()
         elif fetch_all:
             result = cursor.fetchall()
@@ -101,3 +104,18 @@ def get_reports_data(start_date, end_date):
     params = (start_date, end_date)
     data, error = _execute_query(query, params, fetch_all=True)
     return data, error
+
+def get_recent_expenses():
+    query = "SELECT TOP 5 Descripcion, Monto, Categoria, FechaGasto FROM Gastos ORDER BY FechaGasto DESC"
+    expenses, error = _execute_query(query, fetch_all=True)
+    return expenses, error
+
+def create_expense(description, amount, category):
+    query = "INSERT INTO Gastos (Descripcion, Monto, Categoria, FechaGasto) VALUES (?, ?, ?, ?)"
+    params = (description, amount, category, datetime.now().strftime('%Y-%m-%d'))
+    success, error = _execute_query(query, params, commit=True)
+    
+    if success:
+        return True, "Gasto creado exitosamente."
+    else:
+        return False, f"Error al crear gasto: {error}"

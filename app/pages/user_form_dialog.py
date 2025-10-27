@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLineEdit, 
                              QComboBox, QPushButton, QMessageBox, QHBoxLayout)
+from PyQt6.QtCore import Qt
 from ..auth import get_all_roles, create_user, update_user
 
 class UserFormDialog(QDialog):
@@ -11,10 +12,14 @@ class UserFormDialog(QDialog):
         self.roles_map = {}
 
         self.setWindowTitle(f"{'Editar' if user_id else 'Agregar'} Usuario")
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(450)
 
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+
         form_layout = QFormLayout()
+        form_layout.setVerticalSpacing(15)
+        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.username_input = QLineEdit()
         self.fullname_input = QLineEdit()
@@ -33,10 +38,15 @@ class UserFormDialog(QDialog):
             form_layout.addRow("Contraseña:", self.password_input)
 
         main_layout.addLayout(form_layout)
+        main_layout.addSpacing(20)
 
         buttons_layout = QHBoxLayout()
         self.save_button = QPushButton("Guardar")
+        self.save_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.cancel_button = QPushButton("Cancelar")
+        self.cancel_button.setObjectName("cancelButton")
+        self.cancel_button.setCursor(Qt.CursorShape.PointingHandCursor)
+
         buttons_layout.addStretch()
         buttons_layout.addWidget(self.cancel_button)
         buttons_layout.addWidget(self.save_button)
@@ -51,52 +61,81 @@ class UserFormDialog(QDialog):
         self.cancel_button.clicked.connect(self.reject)
 
     def load_roles(self):
+        # Carga los roles (excluyendo 'Dev') desde la BD
         roles, error = get_all_roles()
         if error:
-            QMessageBox.critical(self, "Error", f"No se pudieron cargar los roles: {error}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.setWindowTitle("Error")
+            msg.setText(f"No se pudieron cargar los roles: {error}")
+            msg.exec()
             return
         
+        self.role_combo.addItem("Seleccionar rol...", userData=None)
         for role_id, role_name in roles:
             self.roles_map[role_name] = role_id
-            self.role_combo.addItem(role_name)
+            self.role_combo.addItem(role_name, userData=role_id)
 
     def populate_form(self):
+        # Rellena si estamos editando
         self.username_input.setText(self.user_data.NombreUsuario)
         self.fullname_input.setText(self.user_data.NombreCompleto)
         
-        role_name = [name for name, id in self.roles_map.items() if id == self.user_data.idRol]
-        if role_name:
-            self.role_combo.setCurrentText(role_name[0])
+        # Selecciona el rol correcto
+        role_id_to_find = self.user_data.idRol
+        index = self.role_combo.findData(role_id_to_find, role=Qt.ItemDataRole.UserDataRole)
+        if index >= 0:
+            self.role_combo.setCurrentIndex(index)
 
     def handle_save(self):
-        username = self.username_input.text()
-        full_name = self.fullname_input.text()
-        password = self.password_input.text()
-        
-        role_name = self.role_combo.currentText()
-        role_id = self.roles_map.get(role_name)
+        username = self.username_input.text().strip()
+        full_name = self.fullname_input.text().strip()
+        password = self.password_input.text() # No quitamos espacios aquí
+        role_id = self.role_combo.currentData()
 
-        if not all([username, full_name, role_id]):
-            QMessageBox.warning(self, "Datos incompletos", "Complete 'Usuario', 'Nombre Completo' y 'Rol'.")
+        # Validaciones
+        if not username or not full_name or not role_id:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Datos incompletos")
+            msg.setText("Complete 'Usuario', 'Nombre Completo' y 'Rol'.")
+            msg.exec()
             return
 
         try:
+            # Llama a la lógica de crear o actualizar
             if self.user_id:
                 new_password = password if password else None
                 success, message = update_user(self.user_id, username, full_name, role_id, new_password)
             else:
                 if not password:
-                    QMessageBox.warning(self, "Datos incompletos", "La contraseña es obligatoria para nuevos usuarios.")
+                    msg = QMessageBox(self)
+                    msg.setIcon(QMessageBox.Icon.Warning)
+                    msg.setWindowTitle("Datos incompletos")
+                    msg.setText("La contraseña es obligatoria para nuevos usuarios.")
+                    msg.exec()
                     return
                 success, message = create_user(username, password, full_name, role_id)
             
+            # Muestra resultado y cierra si es exitoso
+            msg = QMessageBox(self)
             if success:
-                QMessageBox.information(self, "Éxito", message)
+                msg.setIcon(QMessageBox.Icon.Information)
+                msg.setWindowTitle("Éxito")
+                msg.setText(message)
+                msg.exec()
                 if self.on_success:
                     self.on_success()
                 self.accept()
             else:
-                QMessageBox.critical(self, "Error al guardar", message)
+                msg.setIcon(QMessageBox.Icon.Critical)
+                msg.setWindowTitle("Error al guardar")
+                msg.setText(message)
+                msg.exec()
         
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Ocurrió un error inesperado: {e}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.setWindowTitle("Error")
+            msg.setText(f"Ocurrió un error inesperado: {e}")
+            msg.exec()

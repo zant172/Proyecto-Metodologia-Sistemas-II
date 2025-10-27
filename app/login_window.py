@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QLineEdit, 
-                             QPushButton, QMessageBox, QHBoxLayout)
+                             QPushButton, QMessageBox, QHBoxLayout, QFrame)
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
-from .main_window import MainWindow
+from .main_window import MainWindow 
 from .auth import verify_user
 
 class LoginWindow(QWidget):
@@ -14,35 +14,45 @@ class LoginWindow(QWidget):
         self.main_win = None
         
         self.setWindowTitle("InfinityTech - Inicio de Sesión")
-        self.setGeometry(0, 0, 400, 500)
+        self.setGeometry(0, 0, 450, 550)
+
+        screen_geo = self.screen().availableGeometry()
+        self.move(int((screen_geo.width() - self.width()) / 2), 
+                  int((screen_geo.height() - self.height()) / 2))
 
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        container = QWidget()
-        container.setFixedSize(350, 400)
+        container = QFrame() 
+        container.setObjectName("container") 
+        container.setFixedSize(380, 450)
         container_layout = QVBoxLayout(container)
-        container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        container.setObjectName("container")
+        container_layout.setContentsMargins(40, 40, 40, 40)
+        container.setLayout(container_layout)
 
         title = QLabel("INICIO DE SESIÓN")
-        title.setObjectName("title")
+        title.setObjectName("title") 
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.username_input = QLineEdit(placeholderText="Nombre de usuario")
-        self.password_input = QLineEdit(placeholderText="Contraseña")
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Nombre de usuario")
+        
+        self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("Contraseña")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         
         self.login_button = QPushButton("Ingresar")
+        self.login_button.setCursor(Qt.CursorShape.PointingHandCursor)
         
         container_layout.addWidget(title)
-        container_layout.addStretch()
-        container_layout.addWidget(QLabel("Usuario"))
+        container_layout.addStretch(1)
+        container_layout.addWidget(QLabel("Usuario:"))
         container_layout.addWidget(self.username_input)
-        container_layout.addWidget(QLabel("Contraseña"))
+        container_layout.addWidget(QLabel("Contraseña:"))
         container_layout.addWidget(self.password_input)
-        container_layout.addStretch()
+        container_layout.addStretch(1)
         container_layout.addWidget(self.login_button)
+        container_layout.addStretch(1)
 
         main_layout.addWidget(container)
         
