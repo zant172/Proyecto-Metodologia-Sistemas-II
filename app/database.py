@@ -1,95 +1,91 @@
 import pyodbc
-import configparser
 import os
 import time
 
-config = configparser.ConfigParser()
-ruta_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ruta_config = os.path.join(ruta_base, 'config.ini')
+# --- Parámetros de Conexión Globales (inicializados con defaults) ---
+_SERVER = 'localhost\\SQLEXPRESS'
+_DATABASE = 'sistemgestionvntsjg'
+_USERNAME = None
+_PASSWORD = None
+_TRUSTED = True # Default a Windows Auth
 
-# Nuevo nombre de base de datos por defecto
-DEFAULT_DB_NAME = "sistemgestionvntsjg"
-
-try:
-    config.read(ruta_config)
-    SERVER = config.get('Database', 'SERVER', fallback='localhost\\SQLEXPRESS')
-    # Lee el nombre de la BD desde config.ini, usa DEFAULT_DB_NAME si falta
-    DATABASE = config.get('Database', 'DATABASE', fallback=DEFAULT_DB_NAME)
-    USERNAME = config.get('Database', 'USERNAME', fallback=None)
-    PASSWORD = config.get('Database', 'PASSWORD', fallback=None)
-    print(f"✅ Configuración cargada: Server={SERVER}, DB={DATABASE}")
-except Exception as e:
-    print(f"❌ Error al leer config.ini: {e}. Usando defaults.")
-    SERVER = 'localhost\\SQLEXPRESS'
-    DATABASE = DEFAULT_DB_NAME # Usa el nuevo default
-    USERNAME = None
-    PASSWORD = None
+def set_connection_parameters(server, database, username=None, password=None, trusted=True):
+    # Función llamada por main.py para configurar la conexión de esta sesión
+    global _SERVER, _DATABASE, _USERNAME, _PASSWORD, _TRUSTED
+    _SERVER = server
+    _DATABASE = database
+    _USERNAME = username
+    _PASSWORD = password
+    _TRUSTED = trusted
+    print(f"ℹ️  Parámetros de conexión en memoria: Srv={_SERVER}, DB={_DATABASE}, Trusted={_TRUSTED}, Usr={_USERNAME is not None}")
 
 def get_db_connection_string(db_name):
-    # Genera la cadena de conexión para una base de datos específica
+    # Construye la cadena usando los parámetros globales _SERVER, _USERNAME, etc.
     connection_string = (
         f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-        f"SERVER={SERVER};"
+        f"SERVER={_SERVER};"
         f"DATABASE={db_name};"
         f"TrustServerCertificate=yes;"
     )
-    if USERNAME and PASSWORD and USERNAME.strip():
-        connection_string += f"UID={USERNAME};PWD={PASSWORD};"
-    else:
+    if not _TRUSTED and _USERNAME and _PASSWORD is not None:
+        connection_string += f"UID={_USERNAME};PWD={_PASSWORD};"
+    else: # Si es Trusted o si faltan user/pass en modo SQL Auth
         connection_string += "Trusted_Connection=yes;"
     return connection_string
 
-def get_connection(db_name=DATABASE):
-    # Se conecta a la base de datos especificada (por defecto, la configurada)
+def get_connection(db_name=_DATABASE):
+    # Obtiene una conexión usando los parámetros globales actuales
     try:
         conn_str = get_db_connection_string(db_name)
-        return pyodbc.connect(conn_str, autocommit=False)
+        return pyodbc.connect(conn_str, autocommit=False) # autocommit=False es importante!
     except Exception as e:
         print(f"❌ Error al conectar a DB '{db_name}': {e}")
         return None
 
+# --- Funciones de Inicialización (dependen de get_connection) ---
+
 def check_database_exists():
-    # Verifica si la base de datos principal (DATABASE) existe
-    print(f"--- Verificando existencia de DB '{DATABASE}' ---")
+    # Verifica si la BD principal (_DATABASE) existe conectándose a 'master'
+    print(f"--- Verificando existencia de DB '{_DATABASE}' ---")
     conn_master = None
     try:
-        # Conexión a 'master'
-        master_conn_str = get_db_connection_string('master')
-        conn_master = pyodbc.connect(master_conn_str, autocommit=True)
+        conn_master = get_connection('master') # Usa los parámetros actuales para conectar a master
+        if not conn_master: return False
+        conn_master.autocommit = True # Necesario para consultar sys.databases
         cursor = conn_master.cursor()
-        cursor.execute("SELECT COUNT(*) FROM sys.databases WHERE name = ?", (DATABASE,))
+        cursor.execute("SELECT COUNT(*) FROM sys.databases WHERE name = ?", (_DATABASE,))
         exists = cursor.fetchone()[0] > 0
-        if exists: print(f"✅ DB '{DATABASE}' ya existe.")
-        else: print(f"ℹ️  DB '{DATABASE}' no existe.")
+        if exists: print(f"✅ DB '{_DATABASE}' ya existe.")
+        else: print(f"ℹ️  DB '{_DATABASE}' no existe.")
         return exists
     except Exception as e:
-        print(f"❌ Error verificando existencia de DB '{DATABASE}': {e}")
+        print(f"❌ Error verificando DB '{_DATABASE}': {e}")
         return False
     finally:
         if conn_master: conn_master.close()
 
 def create_database():
-    # Intenta crear la base de datos principal
-    print(f"--- Intentando crear DB '{DATABASE}' ---")
+    # Intenta crear la BD principal conectándose a 'master'
+    print(f"--- Intentando crear DB '{_DATABASE}' ---")
     conn_master = None
     try:
-        master_conn_str = get_db_connection_string('master')
-        conn_master = pyodbc.connect(master_conn_str, autocommit=True)
+        conn_master = get_connection('master')
+        if not conn_master: return False
+        conn_master.autocommit = True # Necesario para CREATE DATABASE
         cursor = conn_master.cursor()
-        # Usa el nuevo nombre DATABASE al crear
-        cursor.execute(f"CREATE DATABASE [{DATABASE}]")
-        print(f"✅ DB '{DATABASE}' creada.")
-        time.sleep(2) # Pausa breve
+        cursor.execute(f"CREATE DATABASE [{_DATABASE}]") # Crea la BD con el nombre actual
+        print(f"✅ DB '{_DATABASE}' creada.")
+        time.sleep(2)
         return True
     except Exception as e:
-        print(f"❌ Error crítico al crear DB '{DATABASE}': {e}")
+        print(f"❌ Error crítico al crear DB '{_DATABASE}': {e}")
         print("   Verifica permisos 'dbcreator'.")
         return False
     finally:
         if conn_master: conn_master.close()
 
 def check_schema_exists(conn):
-    # Verifica si la tabla 'Roles' existe dentro de la BD conectada
+    # Verifica si la tabla 'Roles' existe dentro de la conexión dada
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'Roles'")
@@ -100,24 +96,26 @@ def check_schema_exists(conn):
         return False
 
 def initialize_database_schema():
-    # Flujo completo: Verifica/Crea BD -> Verifica/Crea Tablas
+    # Flujo completo: Verifica/Crea BD -> Verifica/Crea Tablas (schema)
     print("--- Iniciando inicialización DB ---")
-    if not check_database_exists():
-        if not create_database(): return False # Detiene si no se puede crear BD
+    if not check_database_exists(): # Si la BD no existe...
+        if not create_database(): return False # ...intenta crearla, si falla, termina.
 
-    conn = get_connection(DATABASE) # Conecta a la BD (recién creada o existente)
+    # Ahora la BD (_DATABASE) debería existir, conectamos a ella
+    conn = get_connection(_DATABASE)
     if not conn:
-        print(f"❌ No se pudo conectar a '{DATABASE}'.")
+        print(f"❌ No se pudo conectar a '{_DATABASE}' para crear schema.")
         return False
 
+    # Verifica si las tablas ya existen dentro de _DATABASE
     if check_schema_exists(conn):
         print("✅ Esquema (tablas) ya existe.")
-        conn.close(); return True # Todo listo
+        conn.close(); return True # Ya está todo listo
 
+    # Si las tablas no existen, las crea
     print("ℹ️  Esquema (tablas) no existe. Creando...")
     try:
         cursor = conn.cursor()
-        # El script SQL para crear tablas sigue igual, se ejecuta DENTRO de la BD correcta
         sql_script = """
         CREATE TABLE Roles ( idRol INT IDENTITY(1,1) PRIMARY KEY, NombreRol NVARCHAR(50) NOT NULL UNIQUE );
         CREATE TABLE Usuarios ( idUsuario INT IDENTITY(1,1) PRIMARY KEY, NombreUsuario NVARCHAR(100) NOT NULL UNIQUE, NombreCompleto NVARCHAR(200) NOT NULL, Contrasena VARBINARY(60) NOT NULL, idRol INT NOT NULL, Activo BIT NOT NULL DEFAULT 1, CONSTRAINT FK_Usuarios_Roles FOREIGN KEY (idRol) REFERENCES Roles(idRol) );
@@ -133,22 +131,43 @@ def initialize_database_schema():
         commands = [cmd.strip() for cmd in sql_script.split(';') if cmd.strip()]
         for command in commands:
             if command: cursor.execute(command)
-        conn.commit()
+        conn.commit() # Confirma creación de tablas e inserts
         print("✅ Esquema (tablas) creado.")
         return True
     except Exception as e:
-        conn.rollback()
+        conn.rollback() # Deshace si algo falló
         print(f"❌ Error crítico al crear tablas: {e}")
         return False
     finally:
-        if conn: conn.close()
+        if conn: conn.close() # Cierra conexión a _DATABASE
 
-# Bloque de prueba
-if __name__ == '__main__':
-    if initialize_database_schema():
-        print("Intentando conectar a DB final...")
-        conn = get_connection()
-        if conn: print("✅ Conexión final OK!"); conn.close()
-        else: print("❌ Conexión final falló.")
-    else:
-        print("❌ Inicialización completa falló.")
+# --- Función de Test de Conexión (usada por el diálogo) ---
+def test_connection(server, database, username=None, password=None, trusted=True):
+    # Intenta conectar con los parámetros dados (normalmente a 'master' o a la BD del usuario)
+    print(f"--- Probando conexión: Srv={server}, DB={database}, Trusted={trusted} ---")
+    conn = None
+    try:
+        # Construye la cadena de prueba
+        conn_str = (
+            f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+            f"SERVER={server};"
+            f"DATABASE={database};" # Usa la BD proporcionada (ej 'master')
+            f"TrustServerCertificate=yes;"
+        )
+        if not trusted and username and password is not None:
+            conn_str += f"UID={username};PWD={password};"
+        else:
+            conn_str += "Trusted_Connection=yes;"
+        # Intenta conectar con timeout corto y autocommit True para la prueba
+        conn = pyodbc.connect(conn_str, timeout=5, autocommit=True)
+        print("✅ Prueba OK.")
+        return True, "Conexión exitosa."
+    except Exception as e:
+        print(f"❌ Prueba fallida: {e}")
+        return False, f"Error de conexión:\n{e}"
+    finally:
+        if conn: conn.close() # Cierra la conexión de prueba
+
+# Bloque de prueba (si ejecutas python app/database.py)
+# Ya no es tan útil porque depende de set_connection_parameters
+# if __name__ == '__main__': ...
