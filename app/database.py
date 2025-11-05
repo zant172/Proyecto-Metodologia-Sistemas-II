@@ -121,12 +121,19 @@ def initialize_database_schema():
         CREATE TABLE Usuarios ( idUsuario INT IDENTITY(1,1) PRIMARY KEY, NombreUsuario NVARCHAR(100) NOT NULL UNIQUE, NombreCompleto NVARCHAR(200) NOT NULL, Contrasena VARBINARY(60) NOT NULL, idRol INT NOT NULL, Activo BIT NOT NULL DEFAULT 1, CONSTRAINT FK_Usuarios_Roles FOREIGN KEY (idRol) REFERENCES Roles(idRol) );
         CREATE TABLE Categorias ( idCategoria INT IDENTITY(1,1) PRIMARY KEY, NombreCategoria NVARCHAR(100) NOT NULL UNIQUE );
         CREATE TABLE Productos ( idProducto INT IDENTITY(1,1) PRIMARY KEY, Codigo NVARCHAR(50) NOT NULL UNIQUE, NombreProducto NVARCHAR(200) NOT NULL UNIQUE, idCategoria INT NOT NULL, Precio DECIMAL(10, 2) NOT NULL, Stock INT NOT NULL DEFAULT 0, Activo BIT NOT NULL DEFAULT 1, CONSTRAINT FK_Productos_Categorias FOREIGN KEY (idCategoria) REFERENCES Categorias(idCategoria) );
-        CREATE TABLE Ventas ( idVenta INT IDENTITY(1,1) PRIMARY KEY, idUsuario INT NOT NULL, Total DECIMAL(10, 2) NOT NULL, FechaVenta DATETIME NOT NULL DEFAULT GETDATE(), CONSTRAINT FK_Ventas_Usuarios FOREIGN KEY (idUsuario) REFERENCES Usuarios(idUsuario) );
+        CREATE TABLE Ventas ( idVenta INT IDENTITY(1,1) PRIMARY KEY, idUsuario INT NOT NULL, Total DECIMAL(10, 2) NOT NULL,idMetodoPago INT NULL, FechaVenta DATETIME NOT NULL DEFAULT GETDATE(), CONSTRAINT FK_Ventas_Usuarios FOREIGN KEY (idUsuario) REFERENCES Usuarios(idUsuario) );
         CREATE TABLE DetalleVentas ( idDetalleVenta INT IDENTITY(1,1) PRIMARY KEY, idVenta INT NOT NULL, idProducto INT NOT NULL, Cantidad INT NOT NULL, PrecioUnitario DECIMAL(10, 2) NOT NULL, CONSTRAINT FK_DetalleVentas_Ventas FOREIGN KEY (idVenta) REFERENCES Ventas(idVenta), CONSTRAINT FK_DetalleVentas_Productos FOREIGN KEY (idProducto) REFERENCES Productos(idProducto) );
         CREATE TABLE Gastos ( idGasto INT IDENTITY(1,1) PRIMARY KEY, Descripcion NVARCHAR(255) NOT NULL, Monto DECIMAL(10, 2) NOT NULL, Categoria NVARCHAR(100) NULL, FechaGasto DATE NOT NULL DEFAULT GETDATE() );
+        CREATE TABLE MetodosPago (idMetodoPago INT IDENTITY(1,1) PRIMARY KEY, Nombre NVARCHAR(100) NOT NULL UNIQUE, TipoMetodo NVARCHAR(50) NOT NULL DEFAULT 'Otros', Activo BIT NOT NULL DEFAULT1);
+        CREATE TABLE CierresDeCaja (idCierre INT IDENTITY(1,1) PRIMARY KEY,FechaCierre DATE NOT NULL UNIQUE,TotalVentas DECIMAL(10, 2) NOT NULL, -- Suma de todoTotalGastos DECIMAL(10, 2) NOT NULL,BalanceNeto DECIMAL(10, 2) NOT NULL, -- TotalVentas - TotalGastosidUsuarioCierre INT NOT NULL,FechaRegistro DATETIME NOT NULL DEFAULT GETDATE(),CONSTRAINT FK_Cierres_Usuarios FOREIGN KEY (idUsuarioCierre) REFERENCES Usuarios(idUsuario));
+        CREATE TABLE CierresDeCajaDetalle (idCierreDetalle INT IDENTITY(1,1) PRIMARY KEY,idCierre INT NOT NULL,idMetodoPago INT NOT NULL,Total DECIMAL(10, 2) NOT NULL,CONSTRAINT FK_CierreDetalle_Cierre FOREIGN KEY (idCierre) REFERENCES CierresDeCaja(idCierre),CONSTRAINT FK_CierreDetalle_Metodo FOREIGN KEY (idMetodoPago) REFERENCES MetodosPago(idMetodoPago));
         CREATE TABLE Configuracion ( idConfig INT IDENTITY(1,1) PRIMARY KEY, NombreNegocio NVARCHAR(200) NULL, TipoNegocio NVARCHAR(100) NULL, SetupCompleto BIT NOT NULL DEFAULT 0 );
         INSERT INTO Roles (NombreRol) VALUES ('Dev'), ('Admin'), ('Usuario');
         INSERT INTO Configuracion (SetupCompleto) VALUES (0);
+        INSERT INTO MetodosPago (Nombre, TipoMetodo) VALUES ('Efectivo', 'Efectivo');
+INSERT INTO MetodosPago (Nombre, TipoMetodo) VALUES ('Tarjeta de Débito', 'Tarjeta');
+INSERT INTO MetodosPago (Nombre, TipoMetodo) VALUES ('Tarjeta de Crédito', 'Tarjeta');
+INSERT INTO MetodosPago (Nombre, TipoMetodo) VALUES ('Mercado Pago', 'Digital');
         """
         commands = [cmd.strip() for cmd in sql_script.split(';') if cmd.strip()]
         for command in commands:
