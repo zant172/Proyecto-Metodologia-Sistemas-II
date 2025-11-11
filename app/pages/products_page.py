@@ -19,7 +19,8 @@ class ProductTableWidget(QTableWidget):
         # Permitimos que las columnas se ajusten pero damos prioridad al nombre
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) # Nombre Producto
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch) # Acciones
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed) # Acciones - ancho fijo
+        header.resizeSection(6, 240) # Ancho mínimo para columna Acciones
         
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -64,26 +65,30 @@ class ProductTableWidget(QTableWidget):
             
             # Columna de Acciones
             actions_widget = QWidget()
+            actions_widget.setMinimumHeight(50) # Altura mínima para que los botones sean visibles
             actions_layout = QHBoxLayout(actions_widget)
-            actions_layout.setContentsMargins(0, 0, 0, 0) # Sin márgenes internos
-            actions_layout.setSpacing(10) # Espacio entre botones
+            actions_layout.setContentsMargins(8, 4, 8, 4) # Márgenes para dar espacio
+            actions_layout.setSpacing(8) # Espacio entre botones
             
-            edit_btn = QPushButton("Editar")
+            edit_btn = QPushButton("✎ Editar")
             edit_btn.setObjectName("editButton") # ID para el QSS
+            edit_btn.setMinimumSize(90, 36) # Tamaño mínimo explícito
             edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             edit_btn.clicked.connect(partial(self.parent_widget.open_edit_dialog, product_id))
             
-            delete_btn = QPushButton("Eliminar")
+            delete_btn = QPushButton("🗑 Eliminar")
             delete_btn.setObjectName("deleteButton") # ID para el QSS
+            delete_btn.setMinimumSize(100, 36) # Tamaño mínimo explícito
             delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             delete_btn.clicked.connect(partial(self.parent_widget.handle_delete, product_id))
             
-            actions_layout.addStretch() # Empuja botones a la derecha
+            actions_layout.addStretch() # Empuja botones al centro
             actions_layout.addWidget(edit_btn)
             actions_layout.addWidget(delete_btn)
-            actions_layout.addStretch() # Centra los botones si hay espacio
+            actions_layout.addStretch() # Centra los botones
             
             self.setCellWidget(row, 6, actions_widget)
+            self.setRowHeight(row, 56) # Altura de fila para acomodar botones
 
 class InventoryWidget(QWidget):
     def __init__(self):
@@ -108,7 +113,7 @@ class InventoryWidget(QWidget):
         search_input = QLineEdit()
         search_input.setPlaceholderText("Buscar producto...")
         
-        add_btn = QPushButton("Agregar Producto")
+        add_btn = QPushButton("➕ Agregar Producto")
         add_btn.setObjectName("addButton") # ID para el QSS
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.open_add_dialog)

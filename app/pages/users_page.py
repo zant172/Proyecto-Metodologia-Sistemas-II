@@ -23,7 +23,8 @@ class UserTableWidget(QTableWidget):
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents) # Ajusta ID, Usuario, Rol
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) # Nombre Completo toma espacio
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) # Acciones toma espacio
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed) # Acciones - ancho fijo
+        header.resizeSection(4, 240) # Ancho mínimo para columna Acciones
 
         # Configuraciones generales de la tabla
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows) # Seleccionar filas completas
@@ -59,37 +60,42 @@ class UserTableWidget(QTableWidget):
 
             # --- Columna de Acciones ---
             actions_widget = QWidget()
+            actions_widget.setMinimumHeight(50) # Altura mínima para que los botones sean visibles
             actions_layout = QHBoxLayout(actions_widget)
-            actions_layout.setContentsMargins(0, 0, 0, 0) # Sin márgenes internos
-            actions_layout.setSpacing(10) # Espacio entre botones
+            actions_layout.setContentsMargins(8, 4, 8, 4) # Márgenes para dar espacio
+            actions_layout.setSpacing(8) # Espacio entre botones
 
             # Botón Editar
-            edit_btn = QPushButton("Editar")
+            edit_btn = QPushButton("✎ Editar")
             edit_btn.setObjectName("editButton") # ID para QSS
+            edit_btn.setMinimumSize(90, 36) # Tamaño mínimo explícito
             edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             # Conecta el clic a la función open_edit_dialog de UsersWidget
             edit_btn.clicked.connect(partial(self.parent_widget.open_edit_dialog, user_id))
 
             # Botón Eliminar
-            delete_btn = QPushButton("Eliminar")
+            delete_btn = QPushButton("🗑 Eliminar")
             delete_btn.setObjectName("deleteButton") # ID para QSS
+            delete_btn.setMinimumSize(100, 36) # Tamaño mínimo explícito
             delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             # Conecta el clic a la función handle_delete de UsersWidget
             delete_btn.clicked.connect(partial(self.parent_widget.handle_delete, user_id))
 
             # Añade botones al layout de acciones
-            actions_layout.addStretch() # Empuja a la derecha
+            actions_layout.addStretch() # Empuja al centro
             actions_layout.addWidget(edit_btn)
             actions_layout.addWidget(delete_btn)
-            actions_layout.addStretch() # Centra si hay espacio
+            actions_layout.addStretch() # Centra los botones
 
             # Pone el widget con los botones en la celda de acciones
             self.setCellWidget(row, 4, actions_widget)
+            self.setRowHeight(row, 56) # Altura de fila para acomodar botones
 
 class UsersWidget(QWidget):
     # Esta es la clase principal para la pestaña de Gestión de Usuarios
-    def __init__(self):
+    def __init__(self, user_role=None):
         super().__init__()
+        self.user_role = user_role  # Guarda el rol del usuario actual
         self.setup_ui()
 
     def setup_ui(self):
@@ -114,7 +120,7 @@ class UsersWidget(QWidget):
         search_input.setPlaceholderText("Buscar usuario...")
         # El QSS general se encarga del estilo del QLineEdit
 
-        add_btn = QPushButton("Agregar Usuario")
+        add_btn = QPushButton("➕ Agregar Usuario")
         add_btn.setObjectName("addButton") # ID para QSS (botón verde)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.open_add_dialog) # Conecta a la función para abrir el diálogo

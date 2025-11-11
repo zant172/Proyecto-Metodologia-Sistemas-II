@@ -58,7 +58,7 @@ class MetodosPagoWidget(QWidget):
         
         controls_layout = QHBoxLayout(); controls_layout.setContentsMargins(0, 10, 0, 20)
         controls_layout.addStretch()
-        add_btn = QPushButton("Agregar Método de Pago"); add_btn.setObjectName("addButton")
+        add_btn = QPushButton("➕ Agregar Método de Pago"); add_btn.setObjectName("addButton")
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor); add_btn.clicked.connect(self.open_add_dialog)
         controls_layout.addWidget(add_btn); layout.addLayout(controls_layout)
         

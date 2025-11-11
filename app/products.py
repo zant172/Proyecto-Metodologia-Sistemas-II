@@ -93,7 +93,8 @@ def delete_product(product_id):
         return False, f"Error al eliminar producto: {error}"
 
 def search_products(search_term):
-    query = f"""
+    # Búsqueda segura de productos por nombre o código
+    query = """
         SELECT p.idProducto, p.Codigo, p.NombreProducto, p.Precio, p.Stock
         FROM Productos p
         WHERE p.Activo = 1 AND p.Stock > 0 AND

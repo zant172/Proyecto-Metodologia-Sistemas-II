@@ -103,7 +103,9 @@ class CajaWidget(QWidget):
              lbl = QLabel("Sin ventas registradas hoy."); lbl.setStyleSheet("font-size: 12px; color: #94A3B8;"); self.desglose_ventas_layout.addWidget(lbl)
         else:
             for (metodo, total) in resumen['ventas_desglose']:
-                 lbl_text = f"  • {metodo}: ${total:.2f}"
+                 # Convertir total a float si es Decimal para evitar errores de formato
+                 total_float = float(total) if hasattr(total, '__float__') else total
+                 lbl_text = f"  • {metodo}: ${total_float:.2f}"
                  lbl = QLabel(lbl_text); lbl.setStyleSheet("font-size: 13px; color: #CBD5E1;"); self.desglose_ventas_layout.addWidget(lbl)
         self.desglose_ventas_layout.addStretch()
 

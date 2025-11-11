@@ -103,12 +103,38 @@ class ProductFormDialog(QDialog):
         stock = self.stock_input.value()
         cat_id = self.categoria_combo.currentData() # Obtenemos el ID guardado
 
-        # Validaciones básicas
+        # Validaciones mejoradas
         if not codigo or not nombre or not cat_id or precio <= 0:
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setWindowTitle("Datos incompletos")
             msg.setText("Por favor, complete todos los campos requeridos.")
+            msg.exec()
+            return
+        
+        # Validar longitud de campos
+        if len(codigo) > 50:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Código muy largo")
+            msg.setText("El código no puede exceder 50 caracteres.")
+            msg.exec()
+            return
+            
+        if len(nombre) > 200:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Nombre muy largo")
+            msg.setText("El nombre no puede exceder 200 caracteres.")
+            msg.exec()
+            return
+        
+        # Validar caracteres especiales peligrosos
+        if any(char in codigo + nombre for char in ["'", '"', ";", "--", "/*", "*/"]):
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Caracteres inválidos")
+            msg.setText("El código y nombre no pueden contener comillas, puntos y coma o caracteres SQL.")
             msg.exec()
             return
 

@@ -96,7 +96,8 @@ class MainWindow(QMainWindow):
         print(f"ℹ️  Rol {self.user_role}. Ocultando: {items_to_hide}" if is_user else f"ℹ️  Rol {self.user_role}. Mostrando todo.")
         for i in range(self.nav_bar.count()):
             item = self.nav_bar.item(i)
-            widget = self.stacked_widget.widget(i)
+            page_widget = self.stacked_widget.widget(i)  # Corregido: renombrado de 'widget' a 'page_widget'
             should_hide = item.text() in items_to_hide
             item.setHidden(should_hide)
-            if widget: widget.setEnabled(not should_hide)
+            if page_widget:  # Corregido: usar page_widget en lugar de widget
+                page_widget.setEnabled(not should_hide)

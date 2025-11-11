@@ -81,9 +81,10 @@ def verify_user(username, password):
     """
     user_data, error = _execute_query(query, (username,), fetch_one=True)
     # Si encuentra usuario Y la contraseña coincide...
-    if user_data and check_password(user_data.Contrasena, password):
-        print(f"✅ Login exitoso para {username} (Rol: {user_data.NombreRol})")
-        return user_data.NombreRol, user_data.idUsuario # Devuelve Rol y ID
+    # user_data es una tupla: (Contrasena, NombreRol, idUsuario)
+    if user_data and check_password(user_data[0], password):
+        print(f"✅ Login exitoso para {username} (Rol: {user_data[1]})")
+        return user_data[1], user_data[2] # Devuelve Rol y ID
     # Si hubo error en la consulta
     if error: print(f"❌ Error durante login query: {error}")
     # Si no encontró usuario o contraseña incorrecta
@@ -127,18 +128,18 @@ def get_all_roles():
 def update_user(user_id, username, full_name, role_id, new_password=None):
     # Actualiza datos de un usuario existente
     try:
-        # Construcción dinámica de la consulta UPDATE
-        query_parts = ["UPDATE Usuarios SET NombreUsuario = ?, NombreCompleto = ?, idRol = ?"]
-        params = [username, full_name, role_id]
-        if new_password: # Si se ingresó nueva contraseña
+        # Construcción dinámica de la consulta UPDATE (corregida)
+        if new_password:
+            # Si hay nueva contraseña, actualiza también Contrasena
             hashed = hash_password(new_password)
-            query_parts.append(", Contrasena = ?")
-            params.append(hashed)
-        query_parts.append("WHERE idUsuario = ?")
-        params.append(user_id)
-        query = " ".join(query_parts)
+            query = "UPDATE Usuarios SET NombreUsuario = ?, NombreCompleto = ?, idRol = ?, Contrasena = ? WHERE idUsuario = ?"
+            params = (username, full_name, role_id, hashed, user_id)
+        else:
+            # Si NO hay nueva contraseña, solo actualiza datos básicos
+            query = "UPDATE Usuarios SET NombreUsuario = ?, NombreCompleto = ?, idRol = ? WHERE idUsuario = ?"
+            params = (username, full_name, role_id, user_id)
 
-        success, error = _execute_query(query, tuple(params), commit=True)
+        success, error = _execute_query(query, params, commit=True)
         if success: return True, "Usuario actualizado."
         else:
             if error and ('UNIQUE KEY' in error or 'UNIQUE constraint' in error or 'duplicate key' in error):

@@ -101,8 +101,10 @@ if __name__ == '__main__':
             msg_box.setWindowTitle("Error Crítico de Base de Datos")
             msg_box.setText("No se pudo inicializar el esquema.\nVerifique permisos o conexión.\nLa aplicación se cerrará.")
             try:
-                with open("style.qss", "r", encoding="utf-8") as f: msg_box.setStyleSheet(f.read())
-            except: pass
+                with open("style.qss", "r", encoding="utf-8") as f: 
+                    msg_box.setStyleSheet(f.read())
+            except Exception as style_error:
+                print(f"⚠️ No se pudo cargar estilo para MessageBox: {style_error}")
             msg_box.exec()
             sys.exit(1)
 
@@ -114,8 +116,10 @@ if __name__ == '__main__':
                 style = f.read()
                 app.setStyleSheet(style)
                 print("✅ Estilo 'style.qss' cargado.")
-        except FileNotFoundError: print("❌ Advertencia: No se encontró 'style.qss'.")
-        except Exception as e: print(f"❌ Error al cargar 'style.qss': {e}")
+        except FileNotFoundError: 
+            print("⚠️ Advertencia: No se encontró 'style.qss'. Continuando sin estilos.")
+        except Exception as e: 
+            print(f"⚠️ Error al cargar 'style.qss': {e}. Continuando sin estilos.")
 
         # Mostrar LoginWindow
         login_window = LoginWindow()

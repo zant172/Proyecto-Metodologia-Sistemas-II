@@ -14,7 +14,9 @@ def process_sale(cart_items, user_id, id_metodo_pago):
         total_sale = sum(item['subtotal'] for item in cart_items)
         if total_sale <= 0: return False, "Carrito vacío o total cero."
 
-        cursor.execute("BEGIN TRANSACTION")
+        # PyODBC maneja transacciones automáticamente con autocommit=False (por defecto)
+        # La transacción inicia automáticamente y se confirma con conn.commit()
+        # NO usar "BEGIN TRANSACTION" explícito en pyodbc
 
         q_venta = "INSERT INTO Ventas (idUsuario, Total, idMetodoPago) OUTPUT INSERTED.idVenta VALUES (?, ?, ?)"
         cursor.execute(q_venta, (user_id, total_sale, id_metodo_pago))
@@ -31,11 +33,12 @@ def process_sale(cart_items, user_id, id_metodo_pago):
         stock_data = []
 
         for item in cart_items:
-            if not all(k in item for k in ['id', 'cantidad', 'precio']) or item['cantidad'] <= 0:
+            if not all(k in item for k in ['id', 'cantidad', 'precio', 'nombre']) or item['cantidad'] <= 0:
                  raise Exception(f"Item inválido en carrito: {item.get('nombre', 'Desconocido')}")
             
-            # Re-verificación de stock dentro de la transacción
-            stock_check = cursor.execute("SELECT Stock FROM Productos WHERE idProducto = ?", (item['id'],)).fetchone()
+            # Re-verificación de stock dentro de la transacción para evitar race conditions
+            cursor.execute("SELECT Stock FROM Productos WHERE idProducto = ?", (item['id'],))
+            stock_check = cursor.fetchone()
             if not stock_check or stock_check[0] < item['cantidad']:
                 raise Exception(f"Stock insuficiente para '{item['nombre']}'. Disponible: {stock_check[0] if stock_check else 0}")
 

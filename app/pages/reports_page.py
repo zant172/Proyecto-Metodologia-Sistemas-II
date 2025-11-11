@@ -65,7 +65,7 @@ class ReportsWidget(QWidget):
         controls_layout.addWidget(self.to_date)
         
         generate_btn = QPushButton("Generar Reporte"); generate_btn.setCursor(Qt.CursorShape.PointingHandCursor); generate_btn.clicked.connect(self.refresh_data)
-        export_btn = QPushButton("Exportar a Excel"); export_btn.setObjectName("addButton"); export_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        export_btn = QPushButton("📊 Exportar a Excel"); export_btn.setObjectName("addButton"); export_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         controls_layout.addWidget(generate_btn); controls_layout.addWidget(export_btn); controls_layout.addStretch()
         layout.addLayout(controls_layout)
         

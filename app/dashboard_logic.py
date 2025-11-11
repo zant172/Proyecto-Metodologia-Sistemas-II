@@ -32,7 +32,9 @@ def get_dashboard_metrics():
     results = {}
     for key, (query, params) in queries.items():
         data, error = _execute_query(query, params, fetch_one=True)
-        results[key] = data[0] if data and data[0] is not None else 0.0
+        # Convertir a float para evitar problemas con Decimal
+        value = float(data[0]) if data and data[0] is not None else 0.0
+        results[key] = value
     balance = results["ventas_mes"] - results["gastos_mes"]
     return {
         "ventas_mes": f"${results['ventas_mes']:.2f}",
@@ -103,9 +105,10 @@ def get_resumen_dia_actual():
     
     if err_v or err_g: return None, f"Error ventas: {err_v}\nError gastos: {err_g}"
     
-    gastos_total = gastos_data[0] if gastos_data and gastos_data[0] is not None else 0.0
+    # Convertir a float para evitar problemas de tipo Decimal vs float
+    gastos_total = float(gastos_data[0]) if gastos_data and gastos_data[0] is not None else 0.0
     ventas_desglose = ventas_data if ventas_data else []
-    ventas_total = sum(v.TotalPorMetodo for v in ventas_desglose)
+    ventas_total = sum(float(v.TotalPorMetodo) for v in ventas_desglose) if ventas_desglose else 0.0
     balance = ventas_total - gastos_total
     
     return {
@@ -139,7 +142,7 @@ def perform_cierre_caja(user_id):
     cursor = None
     try:
         cursor = conn.cursor()
-        cursor.execute("BEGIN TRANSACTION")
+        # PyODBC maneja transacciones automáticamente - NO usar BEGIN TRANSACTION
         
         q_cierre = "INSERT INTO CierresDeCaja (FechaCierre, TotalVentas, TotalGastos, BalanceNeto, idUsuarioCierre) OUTPUT INSERTED.idCierre VALUES (?, ?, ?, ?, ?)"
         params_cierre = (

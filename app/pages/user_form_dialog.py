@@ -90,15 +90,50 @@ class UserFormDialog(QDialog):
     def handle_save(self):
         username = self.username_input.text().strip()
         full_name = self.fullname_input.text().strip()
-        password = self.password_input.text() # No quitamos espacios aquí
+        password = self.password_input.text() # No quitamos espacios aquí (contraseñas pueden tener espacios)
         role_id = self.role_combo.currentData()
 
-        # Validaciones
+        # Validaciones mejoradas
         if not username or not full_name or not role_id:
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setWindowTitle("Datos incompletos")
             msg.setText("Complete 'Usuario', 'Nombre Completo' y 'Rol'.")
+            msg.exec()
+            return
+        
+        # Validar longitud de campos
+        if len(username) > 100:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Usuario muy largo")
+            msg.setText("El nombre de usuario no puede exceder 100 caracteres.")
+            msg.exec()
+            return
+            
+        if len(full_name) > 200:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Nombre muy largo")
+            msg.setText("El nombre completo no puede exceder 200 caracteres.")
+            msg.exec()
+            return
+        
+        # Validar caracteres especiales en username
+        if any(char in username for char in ["'", '"', ";", " ", "--", "/*", "*/"]):
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Caracteres inválidos")
+            msg.setText("El usuario no puede contener espacios, comillas o caracteres SQL.")
+            msg.exec()
+            return
+        
+        # Validar longitud de contraseña para nuevos usuarios
+        if not self.user_id and len(password) < 6:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Contraseña muy corta")
+            msg.setText("La contraseña debe tener al menos 6 caracteres.")
             msg.exec()
             return
 

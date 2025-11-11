@@ -50,10 +50,25 @@ class POSWidget(QWidget):
         self.search_results = products if products else []; self.refresh_search_results()
 
     def refresh_search_results(self):
-        while self.search_layout.count(): item = self.search_layout.takeAt(0); widget = item.widget();
-        if widget: widget.deleteLater()
-        if not self.search_results and len(self.search_input.text()) < 2: lbl = QLabel("Escriba 2+ caracteres..."); lbl.setAlignment(Qt.AlignmentFlag.AlignCenter); self.search_layout.addWidget(lbl)
-        elif not self.search_results: lbl = QLabel("No se encontraron productos."); lbl.setAlignment(Qt.AlignmentFlag.AlignCenter); self.search_layout.addWidget(lbl)
+        # Limpia los widgets anteriores del layout de búsqueda
+        while self.search_layout.count():
+            item = self.search_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        
+        # Muestra mensaje si no hay suficientes caracteres
+        if not self.search_results and len(self.search_input.text()) < 2:
+            lbl = QLabel("Escriba 2+ caracteres...")
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.search_layout.addWidget(lbl)
+        # Muestra mensaje si no se encontraron productos
+        elif not self.search_results:
+            lbl = QLabel("No se encontraron productos.")
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.search_layout.addWidget(lbl)
+        
+        # Crea un widget para cada producto encontrado
         for product in self.search_results:
             p_frame = QFrame(); p_frame.setStyleSheet("QFrame { border-bottom: 1px solid rgba(100, 116, 139, 0.2); padding: 10px 0; } QFrame:hover { background: rgba(99, 102, 241, 0.1); border-radius: 8px;}"); p_frame.setCursor(Qt.CursorShape.PointingHandCursor)
             p_layout = QHBoxLayout(p_frame)
@@ -86,6 +101,11 @@ class POSWidget(QWidget):
         layout.addLayout(buttons_layout)
         self.update_cart_display(); return panel
     
+    def showEvent(self, event):
+        """Se llama automáticamente cuando la página se muestra"""
+        super().showEvent(event)
+        self.load_metodos_pago()
+    
     def load_metodos_pago(self):
         self.metodo_pago_combo.clear()
         self.metodos_pago_map.clear()
@@ -110,9 +130,18 @@ class POSWidget(QWidget):
         self.update_cart_display()
     
     def update_cart_display(self):
-        while self.cart_layout.count(): item = self.cart_layout.takeAt(0); widget = item.widget();
-        if widget: widget.deleteLater()
-        if not self.cart: lbl = QLabel("Carrito vacío"); lbl.setAlignment(Qt.AlignmentFlag.AlignCenter); self.cart_layout.addWidget(lbl)
+        # Limpia los widgets anteriores del carrito
+        while self.cart_layout.count():
+            item = self.cart_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        
+        # Muestra mensaje si el carrito está vacío
+        if not self.cart:
+            lbl = QLabel("Carrito vacío")
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.cart_layout.addWidget(lbl)
         else:
             for pid, item in self.cart.items():
                 i_frame = QFrame(); i_frame.setStyleSheet("border-bottom: 1px solid rgba(100, 116, 139, 0.2); padding: 8px 0;")
