@@ -1,196 +1,226 @@
-ACTA DE CONSTITUCIÓN DEL PROYECTO
-
-
-
-Carrera: Tecnicatura Universitaria en Programación
-Materia: Metodología de Sistemas II – UTN FRT – Año 2025
-Proyecto: Sistema de Gestión de Ventas – InfinityTech
-Fecha: 14/10/2025
-Equipo de trabajo:
-Product Owner: Jael Bazán
-
-
-Scrum Master: Santiago Rojas
-
-
-Developer: Gabriela Cabello
-
-
-Justificación / Propósito
-El proyecto InfinityTech surge de la necesidad de modernizar y optimizar la gestión de un negocio de artículos tecnológicos. Actualmente, el control de ventas, stock y reportes financieros se realiza de manera manual o con herramientas dispersas, lo cual genera errores, demoras e inconsistencias en la información.
-Con este sistema se busca digitalizar el proceso, centralizando toda la información en una única plataforma que permita al dueño del negocio mantener un inventario ordenado, conocer su rentabilidad mensual y mejorar la toma de decisiones a través de reportes precisos.
-Objetivo General
-Desarrollar un sistema informático que gestione de forma integral las ventas, el stock y los reportes financieros del comercio InfinityTech, permitiendo automatizar procesos, reducir errores y mejorar el control operativo y económico del negocio.
- Objetivos Específicos
-Implementar un módulo de registro, modificación y eliminación de productos.
-
-
-Permitir la administración de ventas en tiempo real con actualización automática del stock.
-
-
-Incorporar un sistema de generación de reportes mensuales de ingresos y egresos.
-
-
-Ofrecer alertas automáticas de productos con stock bajo.
-
-
-Desarrollar una interfaz intuitiva que facilite el uso para usuarios administrativos y vendedores.
-
-
-
-
-
-
-
-
-Alcance y Limitaciones
-Alcance:
-Gestión de productos, categorías y proveedores.
-
-
-Control de stock y actualizaciones automáticas tras cada venta.
-
-
-Registro y administración de ventas.
-
-
-Generación de reportes económicos mensuales.
-
-
-Control de usuarios con diferentes niveles de permiso.
-
-
-Limitaciones:
-No incluirá gestión contable avanzada ni facturación electrónica en esta versión.
-
-
-No contempla integración con sistemas de envío o logística externos.
-
-
- Entregables Principales
-Documento de Requerimientos Funcionales y No Funcionales.
-
-
-Diagramas de Base de Datos y Modelado UML.
-
-
-Interfaz de usuario (prototipos o mockups).
-
-
-Código fuente en repositorio GitHub.
-
-
-Manual de Usuario y Manual Técnico.
-
-
-Informe de pruebas funcionales.
-
-
-Presentación final del proyecto ante el docente.
-
-
-
-
-
-Roles y Responsabilidades
- 
-Rol
-Integrante
-Responsabilidades
-Product Owner
-Jael Bazán
-Define las prioridades, valida entregables y mantiene el backlog actualizado.
-Scrum Master
-Santiago Rojas
-Supervisa el cumplimiento de la metodología Scrum, coordina las reuniones y elimina impedimentos.
-Developer
-Gabriela Cabello
-Diseña, programa, prueba y documenta los módulos del sistema.
-
- 
-
-Plan de Proyecto - 5 Sprints (21 de Octubre - 18 de Noviembre)
-
-Sprint 1: Planeación, Diseño y Estructura (21 - 25 de Octubre)
-• Objetivo del Sprint: Formalizar el alcance, las herramientas de gestión y establecer los "planos" conceptuales y físicos del sistema (diseño de la base de datos).
-• Entregables:
-• Acta de Constitución del Proyecto (Project Charter): Define problema, objetivos, alcance, stakeholders y funcionalidades principales.
-• Configuración del Repositorio: Repositorio en GitHub creado y poblado con la estructura de carpetas inicial.
-• Tablero de Trello: Creado y poblado con las tarjetas iniciales de las épicas y los 5 sprints.
-• Definición de la Pila Tecnológica: Documento que oficializa el uso de Python, PyQt6, SQL Server, etc.
-• Diagrama Entidad-Relación (ERD): Diseño visual final de la base de datos, con tablas, columnas y sus relaciones.
-• Diccionario de Datos: Documento que describe cada tabla, columna y tipo de dato de la base de datos.
-Sprint 2: Interfaz, Casos de Uso y Fundación de la DB (28 de Octubre - 1 de Noviembre)
-• Objetivo del Sprint: Definir el diseño visual de la aplicación, detallar las interacciones del usuario y establecer la base de datos funcional en el servidor.
-• Entregables:
-• Wireframes o Mockups de la Interfaz (UI): Bocetos o diseños de baja/media fidelidad de las pantallas clave (Login, Ventana Principal, Stock, Ventas).
-• Casos de Uso: Descripción detallada de las interacciones clave del usuario con el sistema (ej. "Caso de Uso: Realizar una Venta", "Caso de Uso: Gestionar un Producto").
-• Base de Datos Funcional: El script SQL de creación de tablas ejecutado y verificado en SQL Server, listo para ser poblado.
-Sprint 3: Fundación Técnica y Autenticación (4 - 8 de Noviembre)
-• Objetivo del Sprint: Construir la capa de conectividad y seguridad del sistema para entregar la primera funcionalidad tangible: un sistema de login seguro y funcional.
-• Entregables:
-• Módulos de Backend (database.py, auth.py): Código funcional para la conexión a SQL Server y la autenticación segura (hashing y verificación de contraseñas).
-• Ventana de Login Funcional: Interfaz gráfica que valida las credenciales del usuario contra la base de datos.
-• Ventana Principal Básica: Una ventana de bienvenida que se abre tras un login exitoso y muestra el rol del usuario autenticado.
-Sprint 4: Gestión de Inventario (CRUD de Productos) (11 - 15 de Noviembre)
-• Objetivo del Sprint: Implementar la funcionalidad completa para que los administradores puedan gestionar el catálogo de productos (CRUD).
-• Entregables:
-• Módulo de "Stock" funcional: Una sección en la app que muestra la lista de productos en una tabla.
-• Formularios de Creación, Edición y Eliminación: Ventanas emergentes para agregar nuevos productos, modificar los existentes y darlos de baja (soft delete o eliminación).
-• Control de Acceso Implementado: Verificación del rol del usuario. Los botones para "Agregar" y "Editar" productos están deshabilitados u ocultos para usuarios con rol limitado ("Usuario" simple).
-Sprint 5: Módulo de Venta (POS), Usuarios y Reportes (18 de Noviembre)
-• Objetivo del Sprint: Desarrollar el corazón operativo (punto de venta), las funcionalidades administrativas restantes (gestión de personal) y la capa de análisis básico.
-• Entregables:
-• Módulo de "Ventas" funcional: Interfaz con buscador de productos, gestión de cantidades y carrito de compras.
-• Lógica de Transacción: Al finalizar una venta, el stock en la base de datos se actualiza correctamente.
-• Registro de Ventas: Cada venta se guarda correctamente en las tablas Ventas y DetalleVentas.
-• Gestión de Usuarios (CRUD): Implementación de un módulo (solo visible para "Admin") que permite crear, editar y asignar roles a otros usuarios.
-• Reportes/Consultas Básicas: Al menos una vista de reporte simple (ej. Top 10 productos más vendidos o Ventas por rango de fecha).
-●Entregables:
-Carpeta Final del Proyecto: Un archivo ZIP o una carpeta que contiene:
-■ Documentación Final:
- Manual de Usuario: Guía para el cliente final sobre cómo usar el programa.
- Manual Técnico: Explicación de la arquitectura, base de datos y código para otros desarrolladores. 
-Código Fuente Completo: Todo el proyecto de Python.
-Instalador del Programa: El archivo .exe final.    
-Presentación Final: Diapositivas (PowerPoint, Google Slides) para la defensa del proyecto.
-Proyecto Validado: El software es presentado, cumple con todos los objetivos definidos en el Sprint 1 y es aprobado.
-
-Criterios de Éxito
-El sistema debe permitir registrar una venta en menos de 2 minutos.
-
-
-Los reportes mensuales deben generarse automáticamente y mostrar ingresos, egresos y balance.
-
-
-El sistema debe tener un tiempo de disponibilidad del 95% durante las pruebas.
-
-
-Debe mantener la integridad de datos en todas las operaciones de stock y ventas.
-
-
-La interfaz debe ser clara y navegable, validada por usuarios de prueba.
-
-
-
-
-Riesgos Iniciales
-Retrasos en la integración de módulos debido a tiempo académico limitado.
-
-
-Posibles errores de sincronización entre stock y ventas.
-
-
-Falta de experiencia previa en reportes automatizados.
-
-
-Riesgo de pérdida de datos si no se realizan copias de seguridad periódicas.
-
-
-
- Aprobación
-Docente Coordinador: Esper Rodrigo
-Firma / Validación: ___________________________
-Fecha: ___________________________
-
-
+# 🏪 Sistema de Gestión de Ventas SJG
+
+Sistema completo de punto de venta y gestión empresarial desarrollado con **Flet** (Python) y **SQL Server**.
+
+## ✨ Características Principales
+
+### 📊 Gestión Completa
+- **Dashboard interactivo** con métricas en tiempo real
+- **Control de inventario** con alertas de stock bajo
+- **Punto de venta** con carrito de compras y múltiples métodos de pago
+- **Gestión de caja** con apertura, pausa y cierre formal diario
+- **Registro de gastos** con categorías y notas
+- **Reportes financieros** con gráficos y análisis
+
+### 👥 Gestión de Usuarios
+- Sistema de roles: **Dev**, **Admin**, **Usuario**
+- Autenticación segura con **bcrypt**
+- Permisos granulares por rol
+- Menú de usuario interactivo
+
+### 🎨 Interfaz Moderna
+- Diseño limpio y profesional
+- Paleta de colores personalizada
+- Pantalla de login con gradiente
+- Tarjetas métricas con íconos
+- Navegación intuitiva
+- Responsive y optimizada
+
+### 🔒 Seguridad
+- Encriptación de contraseñas (bcrypt)
+- Validación de SQL injection
+- Transacciones de base de datos seguras
+- Gestión de sesiones
+
+## 🚀 Instalación
+
+### Requisitos
+- Python 3.8+
+- SQL Server 2019+ (o SQL Server Express)
+- ODBC Driver 18 for SQL Server
+
+### Paso 1: Clonar el repositorio
+```bash
+git clone https://github.com/zant172/Proyecto-Metodologia-Sistemas-II.git
+cd Proyecto-Metodologia-Sistemas-II
+```
+
+### Paso 2: Instalar dependencias
+```bash
+pip install flet pyodbc bcrypt
+```
+
+### Paso 3: Configurar SQL Server
+Asegúrate de tener SQL Server instalado y en ejecución.
+
+### Paso 4: Ejecutar la aplicación
+```bash
+python main.py
+```
+
+## 📖 Primer Uso
+
+### Setup Automático
+Al ejecutar por primera vez, el sistema:
+1. **Detecta** si hay una conexión guardada
+2. **Crea automáticamente** la base de datos `sistemgestionvntsjg`
+3. **Genera todas las tablas** y relaciones necesarias
+4. **Crea roles** predeterminados (Dev, Admin, Usuario)
+5. **Inserta métodos de pago** iniciales
+6. **Guía** para crear el primer usuario administrador
+
+### Asistente de Configuración
+Si no hay configuración previa, el asistente te guiará:
+1. **Información del negocio** (nombre, tipo)
+2. **Conexión a la base de datos** (servidor, autenticación)
+3. **Creación del super admin** (primer usuario)
+
+## 🗂️ Estructura del Proyecto
+
+```
+Proyecto-Metodologia-Sistemas-II/
+├── main.py                          # Aplicación principal (Flet)
+├── connection_data.json             # Configuración de conexión (auto-generado)
+├── app/
+│   ├── auth.py                      # Autenticación y usuarios
+│   ├── caja_logic.py                # Lógica de caja
+│   ├── dashboard_logic.py           # Métricas y cierres formales
+│   ├── database.py                  # Conexión y esquema
+│   ├── gastos.py                    # Gestión de gastos
+│   ├── metodos_pago.py              # Métodos de pago
+│   ├── products.py                  # Gestión de productos
+│   ├── reportes.py                  # Reportes financieros
+│   └── sales_logic.py               # Procesamiento de ventas
+├── migrate_add_nota_gastos.py       # Script de migración (columna Nota)
+└── README.md                        # Este archivo
+```
+
+## 💾 Base de Datos
+
+### Tablas Principales
+- **Usuarios** - Gestión de usuarios y roles
+- **Productos** - Inventario con categorías
+- **Cajas** - Control de cajas operativas
+- **Ventas / DetalleVentas** - Transacciones de venta
+- **Gastos** - Registro de gastos con notas
+- **CierresDeCaja** - Cierres formales diarios
+- **MetodosPago** - Formas de pago configurables
+
+### Diagrama de Relaciones
+```
+Usuarios ←→ Ventas ←→ DetalleVentas ←→ Productos
+    ↓         ↓
+  Cajas   MetodosPago
+    ↓
+CierresDeCaja ←→ CierresDeCajaDetalle
+```
+
+## 🎯 Funcionalidades por Módulo
+
+### Dashboard
+- 📈 Métricas del día actual
+- 📊 Gráfico de ventas por producto
+- 💰 Resumen de ventas, gastos y balance
+- 🔄 Actualización en tiempo real
+
+### Productos
+- ➕ CRUD completo de productos
+- 🏷️ Gestión de categorías
+- 🔍 Búsqueda y filtrado
+- ⚠️ Alertas de stock bajo
+- 📦 Control de inventario
+
+### Ventas (POS)
+- 🛒 Carrito de compras interactivo
+- 🔢 Selección de cantidades con validación de stock
+- 💳 Múltiples métodos de pago
+- 🧾 Generación automática de ventas
+- ✅ Validación de caja abierta
+
+### Caja
+- 🔓 Apertura de caja por turno
+- ⏸️ Pausa/Reanudación
+- 🔒 Cierre formal con registro permanente
+- 📋 Historial de cajas y cierres
+- 💵 Desglose por método de pago
+
+### Gastos
+- ➕ Registro de gastos con categorías
+- 📝 Campo de notas opcional
+- 🗂️ 7 categorías predefinidas
+- 🗑️ Eliminación con confirmación
+- 📅 Vista de últimos 30 gastos
+
+### Reportes
+- 📊 Rango de fechas personalizado
+- 💰 Resumen financiero detallado
+- 🏆 Top 5 productos más vendidos
+- 💳 Desglose por método de pago
+- 📈 Visualización con tablas
+
+### Usuarios (Admin)
+- 👥 Gestión completa de usuarios
+- 🔐 Asignación de roles
+- ✏️ Edición de perfiles
+- 🗑️ Eliminación de usuarios
+
+## 🛡️ Roles y Permisos
+
+### Dev (Desarrollador)
+- ✅ Acceso total al sistema
+- ✅ Todas las funcionalidades habilitadas
+
+### Admin (Administrador)
+- ✅ Gestión de usuarios
+- ✅ Acceso a reportes
+- ✅ Control de gastos y métodos de pago
+- ✅ Todas las operaciones de venta
+
+### Usuario (Empleado)
+- ✅ Dashboard operativo
+- ✅ Gestión de productos
+- ✅ Punto de venta
+- ✅ Gestión de caja
+- ❌ Sin acceso a reportes ni gestión de usuarios
+
+## 🔧 Migración de Bases de Datos Existentes
+
+Si tienes una base de datos creada antes de las últimas actualizaciones:
+
+```bash
+python migrate_add_nota_gastos.py
+```
+
+Este script agrega la columna `Nota` a la tabla `Gastos`.
+
+## 📝 Notas Técnicas
+
+### Paleta de Colores
+```python
+Primary:   #6366F1  (Índigo)
+Success:   #10B981  (Verde)
+Warning:   #F59E0B  (Ámbar)
+Danger:    #EF4444  (Rojo)
+Info:      #3B82F6  (Azul)
+```
+
+### Configuración de Ventana
+- Tamaño inicial: 1600x1000
+- Tamaño mínimo: 1200x700
+- Modo: Claro (light mode)
+
+## 🤝 Contribuciones
+
+Este proyecto es parte de un trabajo académico para Metodología de Sistemas II.
+
+## 📄 Licencia
+
+Proyecto académico - SJG Solutions © 2025
+
+## 👨‍💻 Autor
+
+**zant172** - [GitHub](https://github.com/zant172)
+
+---
+
+**v1.0** - Sistema de Gestión de Ventas SJG

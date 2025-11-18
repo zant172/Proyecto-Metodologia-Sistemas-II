@@ -3,44 +3,90 @@ from datetime import datetime
 
 def _execute_query(query, params=(), fetch_one=False, fetch_all=False, commit=False):
     conn = get_connection()
-    if not conn: return None, "Error conexión BD."
+    if not conn:
+        return None, "Error conexión BD."
     cursor = None
     try:
         cursor = conn.cursor()
         cursor.execute(query, params if params else [])
         res = None
-        if commit: conn.commit(); res = True
-        elif fetch_one: res = cursor.fetchone()
-        elif fetch_all: res = cursor.fetchall()
+        if commit:
+            conn.commit()
+            res = True
+        elif fetch_one:
+            res = cursor.fetchone()
+        elif fetch_all:
+            res = cursor.fetchall()
         return res, None
     except Exception as e:
-        try: conn.rollback()
-        except Exception as rb_e: print(f"⚠️ Error rollback: {rb_e}")
-        print(f"❌ Error SQL ({query[:50]}...): {e}"); return None, str(e)
+        if conn:
+            try:
+                conn.rollback()
+            except Exception as rb_e:
+                print(f"⚠️ Error rollback: {rb_e}")
+        print(f"❌ Error SQL ({query[:50]}...): {e}")
+        return None, str(e)
     finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
+        if cursor:
+            try:
+                cursor.close()
+            except Exception as e:
+                print(f"⚠️ Error cerrando cursor: {e}")
+        if conn:
+            try:
+                conn.close()
+            except Exception as e:
+                print(f"⚠️ Error cerrando conexión: {e}")
 
 def get_dashboard_metrics():
     today = datetime.now().strftime('%Y-%m-%d')
     first_day = datetime.now().replace(day=1).strftime('%Y-%m-%d')
     queries = {
-        "ventas_mes": ("SELECT SUM(Total) FROM Ventas WHERE FechaVenta >= ?", (first_day,)),
-        "gastos_mes": ("SELECT SUM(Monto) FROM Gastos WHERE FechaGasto >= ?", (first_day,)),
+        "ventas_mes": ("SELECT ISNULL(SUM(Total), 0) FROM Ventas WHERE FechaVenta >= ?", (first_day,)),
+        "gastos_mes": ("SELECT ISNULL(SUM(Monto), 0) FROM Gastos WHERE FechaGasto >= ?", (first_day,)),
         "stock_bajo": ("SELECT COUNT(*) FROM Productos WHERE Stock <= 5 AND Activo = 1", ())
     }
     results = {}
     for key, (query, params) in queries.items():
         data, error = _execute_query(query, params, fetch_one=True)
-        # Convertir a float para evitar problemas con Decimal
-        value = float(data[0]) if data and data[0] is not None else 0.0
-        results[key] = value
+        if error:
+            print(f"⚠️ Error obteniendo métrica {key}: {error}")
+            results[key] = 0.0
+        else:
+            # Convertir a float para evitar problemas con Decimal de SQL Server
+            value = float(data[0]) if data and data[0] is not None else 0.0
+            results[key] = value
+    
     balance = results["ventas_mes"] - results["gastos_mes"]
     return {
         "ventas_mes": f"${results['ventas_mes']:.2f}",
         "gastos_mes": f"${results['gastos_mes']:.2f}",
         "balance_mes": f"${balance:.2f}",
         "stock_bajo": str(int(results['stock_bajo']))
+    }
+
+def get_employee_metrics():
+    """Métricas limitadas para empleados (sin información financiera sensible)"""
+    today = datetime.now().strftime('%Y-%m-%d')
+    queries = {
+        "ventas_hoy": ("SELECT COUNT(*) FROM Ventas WHERE CONVERT(date, FechaVenta) = ?", (today,)),
+        "stock_bajo": ("SELECT COUNT(*) FROM Productos WHERE Stock <= 5 AND Activo = 1", ()),
+        "productos_activos": ("SELECT COUNT(*) FROM Productos WHERE Activo = 1", ())
+    }
+    results = {}
+    for key, (query, params) in queries.items():
+        data, error = _execute_query(query, params, fetch_one=True)
+        if error:
+            print(f"⚠️ Error obteniendo métrica empleado {key}: {error}")
+            results[key] = 0
+        else:
+            value = int(data[0]) if data and data[0] is not None else 0
+            results[key] = value
+    
+    return {
+        "ventas_hoy": results['ventas_hoy'],
+        "stock_bajo": str(results['stock_bajo']),
+        "productos_activos": str(results['productos_activos'])
     }
 
 def get_chart_data():
@@ -98,14 +144,15 @@ def update_metodo_pago(id_metodo, nombre, tipo, activo):
 def get_resumen_dia_actual():
     today = datetime.now().strftime('%Y-%m-%d')
     q_ventas = "SELECT mp.Nombre, SUM(v.Total) AS TotalPorMetodo FROM Ventas v JOIN MetodosPago mp ON v.idMetodoPago = mp.idMetodoPago WHERE CONVERT(date, v.FechaVenta) = ? GROUP BY mp.Nombre"
-    q_gastos = "SELECT SUM(Monto) FROM Gastos WHERE CONVERT(date, FechaGasto) = ?"
+    q_gastos = "SELECT ISNULL(SUM(Monto), 0) FROM Gastos WHERE CONVERT(date, FechaGasto) = ?"
     
     ventas_data, err_v = _execute_query(q_ventas, (today,), fetch_all=True)
     gastos_data, err_g = _execute_query(q_gastos, (today,), fetch_one=True)
     
-    if err_v or err_g: return None, f"Error ventas: {err_v}\nError gastos: {err_g}"
+    if err_v or err_g:
+        return None, f"Error ventas: {err_v}\nError gastos: {err_g}"
     
-    # Convertir a float para evitar problemas de tipo Decimal vs float
+    # Convertir SIEMPRE a float para evitar problemas de tipo Decimal vs float
     gastos_total = float(gastos_data[0]) if gastos_data and gastos_data[0] is not None else 0.0
     ventas_desglose = ventas_data if ventas_data else []
     ventas_total = sum(float(v.TotalPorMetodo) for v in ventas_desglose) if ventas_desglose else 0.0
@@ -115,7 +162,7 @@ def get_resumen_dia_actual():
         "ventas_total": ventas_total,
         "gastos_total": gastos_total,
         "balance_neto": balance,
-        "ventas_desglose": ventas_desglose # Lista de (NombreMetodo, Total)
+        "ventas_desglose": ventas_desglose # Lista de tuplas (NombreMetodo, Total)
     }, None
 
 def check_cierre_realizado_hoy():
@@ -132,17 +179,20 @@ def get_historial_cierres():
 
 def perform_cierre_caja(user_id):
     is_cerrado, msg_cerrado = check_cierre_realizado_hoy()
-    if is_cerrado: return False, msg_cerrado
+    if is_cerrado:
+        return False, msg_cerrado
     
     resumen, err_resumen = get_resumen_dia_actual()
-    if err_resumen: return False, f"Error obteniendo resumen: {err_resumen}"
+    if err_resumen:
+        return False, f"Error obteniendo resumen: {err_resumen}"
     
     conn = get_connection()
-    if not conn: return False, "Error conexión BD."
+    if not conn:
+        return False, "Error conexión BD."
     cursor = None
     try:
         cursor = conn.cursor()
-        # PyODBC maneja transacciones automáticamente - NO usar BEGIN TRANSACTION
+        # PyODBC con autocommit=False maneja transacciones automáticamente
         
         q_cierre = "INSERT INTO CierresDeCaja (FechaCierre, TotalVentas, TotalGastos, BalanceNeto, idUsuarioCierre) OUTPUT INSERTED.idCierre VALUES (?, ?, ?, ?, ?)"
         params_cierre = (
@@ -169,9 +219,21 @@ def perform_cierre_caja(user_id):
         return True, f"Cierre de caja #{id_cierre} realizado exitosamente."
         
     except Exception as e:
-        if conn: conn.rollback()
+        if conn:
+            try:
+                conn.rollback()
+            except Exception as rb_e:
+                print(f"⚠️ Error durante rollback: {rb_e}")
         print(f"❌ Error crítico procesando cierre: {e}")
         return False, f"Error al procesar cierre: {e}"
     finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
+        if cursor:
+            try:
+                cursor.close()
+            except Exception as e:
+                print(f"⚠️ Error cerrando cursor: {e}")
+        if conn:
+            try:
+                conn.close()
+            except Exception as e:
+                print(f"⚠️ Error cerrando conexión: {e}")
