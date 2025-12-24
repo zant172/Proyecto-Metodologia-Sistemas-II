@@ -1,0 +1,389 @@
+REQUERIMIENTOS DE SOFTWARE - SISTEMA DE GESTIÓN DE VENTAS SJG
+===============================================================
+
+1. BACKEND - TECNOLOGÍAS DEL SERVIDOR
+--------------------------------------
+
+1.1 Lenguaje de Programación
+   - Python 3.14.0 o superior
+   - Paradigma: Programación orientada a objetos y funcional
+
+1.2 Librerías y Dependencias Backend
+   - pyodbc 5.2.0 o superior
+     * Driver ODBC para conectividad con Microsoft SQL Server
+     * Permite ejecución de queries SQL y procedimientos almacenados
+     * Gestión de transacciones y manejo de cursores
+   
+   - bcrypt 4.2.1 o superior
+     * Biblioteca de criptografía para hash de contraseñas
+     * Implementa algoritmo bcrypt con salt aleatorio
+     * Protección contra ataques de fuerza bruta y rainbow tables
+
+
+2. FRONTEND - INTERFAZ DE USUARIO
+----------------------------------
+
+2.1 Framework de Interfaz Gráfica
+   - Flet 0.25.0 o superior
+     * Framework multiplataforma basado en Flutter para Python
+     * Permite crear interfaces nativas de escritorio
+     * Arquitectura reactiva con actualización en tiempo real
+     * Soporte para componentes Material Design
+
+2.2 Componentes UI Utilizados
+   - DataTable: Visualización de datos tabulares con paginación
+   - TextField: Campos de entrada de texto con validación
+   - AlertDialog: Diálogos modales para confirmaciones
+   - SnackBar: Notificaciones temporales de acciones
+   - NavigationRail: Barra de navegación lateral
+   - IconButton: Botones con iconos interactivos
+   - Card: Tarjetas para métricas y resumen de datos
+   - Dropdown: Selección de opciones desplegables
+   - DatePicker: Selector de fechas con formato DD/MM/AAAA
+
+2.3 Diseño Visual
+   - Esquema de colores pastel personalizado
+   - Diseño responsive adaptable a diferentes resoluciones
+   - Iconografía de Material Design Icons
+   - Tipografía: Sistema predeterminado del SO
+
+
+3. BASE DE DATOS
+-----------------
+
+3.1 Sistema Gestor de Base de Datos
+   - Microsoft SQL Server 2019 Express o superior
+   - Instancia: localhost\SQLEXPRESS
+   - Nombre de base de datos: sistemgestionvntsjg
+   - Motor: SQL Server Database Engine
+   - Autenticación: Windows Authentication (Trusted Connection)
+
+3.2 Driver de Conectividad
+   - ODBC Driver 18 for SQL Server
+     * Driver oficial de Microsoft
+     * Soporte para conexiones cifradas (TrustServerCertificate)
+     * Compatible con SQL Server 2012 o superior
+     * Descarga: https://learn.microsoft.com/en-us/sql/connect/odbc/
+
+3.3 Esquema de Base de Datos
+
+3.3.1 Tabla: Usuarios
+   - idUsuario (INT, PK, IDENTITY): Identificador único
+   - NombreUsuario (NVARCHAR(50), UNIQUE): Nombre de usuario
+   - PasswordHash (NVARCHAR(255)): Contraseña encriptada con bcrypt
+   - NombreCompleto (NVARCHAR(200)): Nombre completo del usuario
+   - Rol (NVARCHAR(50)): Rol del usuario (Administrador, Cajero)
+   - Activo (BIT, DEFAULT 1): Estado activo/inactivo
+   - FechaCreacion (DATETIME, DEFAULT GETDATE()): Fecha de registro
+
+3.3.2 Tabla: Categorias
+   - idCategoria (INT, PK, IDENTITY): Identificador único
+   - NombreCategoria (NVARCHAR(100), UNIQUE): Nombre de la categoría
+
+3.3.3 Tabla: Productos
+   - idProducto (INT, PK, IDENTITY): Identificador único
+   - Codigo (NVARCHAR(50), UNIQUE): Código interno del producto
+   - CodigoBarra (NVARCHAR(50), UNIQUE, NULL): Código de barras EAN/UPC
+   - NombreProducto (NVARCHAR(200), UNIQUE): Nombre del producto
+   - idCategoria (INT, FK → Categorias): Relación con categoría
+   - Precio (DECIMAL(10,2)): Precio unitario de venta
+   - Stock (INT, DEFAULT 0): Cantidad disponible en inventario
+   - Activo (BIT, DEFAULT 1): Estado activo/inactivo
+
+3.3.4 Tabla: Ventas
+   - idVenta (INT, PK, IDENTITY): Identificador único
+   - FechaVenta (DATETIME, DEFAULT GETDATE()): Fecha y hora de venta
+   - idUsuario (INT, FK → Usuarios): Usuario que realizó la venta
+   - Total (DECIMAL(10,2)): Monto total de la venta
+   - idCaja (INT, FK → Cajas): Caja donde se realizó la venta
+   - idMetodoPago (INT, FK → MetodosPago): Forma de pago utilizada
+
+3.3.5 Tabla: DetalleVentas
+   - idDetalleVenta (INT, PK, IDENTITY): Identificador único
+   - idVenta (INT, FK → Ventas): Relación con venta
+   - idProducto (INT, FK → Productos): Producto vendido
+   - Cantidad (INT): Cantidad de unidades vendidas
+   - PrecioUnitario (DECIMAL(10,2)): Precio al momento de la venta
+
+3.3.6 Tabla: Cajas
+   - idCaja (INT, PK, IDENTITY): Identificador único
+   - FechaCaja (DATE, UNIQUE): Fecha de la caja
+   - Estado (NVARCHAR(20)): Estado (Abierta/Cerrada)
+   - idUsuarioApertura (INT, FK → Usuarios): Usuario que abrió la caja
+   - FechaApertura (DATETIME): Fecha y hora de apertura
+   - idUsuarioCierre (INT, FK → Usuarios, NULL): Usuario que cerró
+   - FechaCierre (DATETIME, NULL): Fecha y hora de cierre
+
+3.3.7 Tabla: CierresDeCaja
+   - idCierre (INT, PK, IDENTITY): Identificador único
+   - FechaCierre (DATE): Fecha del cierre
+   - TotalVentas (DECIMAL(10,2)): Total de ventas del día
+   - TotalGastos (DECIMAL(10,2)): Total de gastos del día
+   - BalanceNeto (DECIMAL(10,2)): Diferencia ventas - gastos
+
+3.3.8 Tabla: Gastos
+   - idGasto (INT, PK, IDENTITY): Identificador único
+   - Concepto (NVARCHAR(200)): Descripción del gasto
+   - Monto (DECIMAL(10,2)): Cantidad del gasto
+   - FechaGasto (DATE): Fecha del gasto
+   - idUsuario (INT, FK → Usuarios): Usuario que registró el gasto
+
+3.3.9 Tabla: MetodosPago
+   - idMetodoPago (INT, PK, IDENTITY): Identificador único
+   - NombreMetodo (NVARCHAR(100), UNIQUE): Nombre del método (Efectivo, Tarjeta, etc.)
+   - Activo (BIT, DEFAULT 1): Estado activo/inactivo
+
+3.4 Relaciones y Restricciones
+   - Integridad referencial mediante claves foráneas (FOREIGN KEY)
+   - Restricciones UNIQUE para evitar duplicados
+   - Valores por defecto (DEFAULT) para campos opcionales
+   - Campos IDENTITY para auto-incremento de identificadores
+   - Cascadas: Sin eliminación en cascada (protección de datos)
+
+
+4. HERRAMIENTAS DE DESPLIEGUE
+------------------------------
+
+4.1 Empaquetador de Aplicación
+   - PyInstaller 6.16.0 o superior
+     * Convierte aplicaciones Python en ejecutables standalone
+     * Incluye intérprete Python y todas las dependencias
+     * Modo --onefile: genera un único archivo .exe
+     * Modo --windowed: sin ventana de consola
+     * Empaqueta recursos: carpeta app/ y archivos de configuración
+     * Tamaño aproximado del ejecutable: 50-80 MB
+
+
+5. REQUISITOS DEL SISTEMA
+--------------------------
+
+5.1 Sistema Operativo
+   - Microsoft Windows 10 (64-bit) o superior
+   - Windows 11 (64-bit) recomendado
+
+5.2 Hardware Mínimo
+   - Procesador: Intel Core i3 o equivalente (2.0 GHz)
+   - Memoria RAM: 4 GB
+   - Espacio en disco: 500 MB para instalación base
+   - Espacio adicional: Variable según tamaño de base de datos
+   - Resolución de pantalla: 1366x768 píxeles mínimo
+
+5.3 Hardware Recomendado
+   - Procesador: Intel Core i5 o superior (2.5 GHz o más)
+   - Memoria RAM: 8 GB o superior
+   - Disco SSD para mejor rendimiento de base de datos
+   - Resolución de pantalla: 1920x1080 píxeles (Full HD)
+
+5.4 Hardware Opcional
+   - Lector de código de barras USB
+     * Compatible con protocolo HID (Human Interface Device)
+     * Códigos soportados: EAN-13, UPC-A, Code 128, Code 39
+     * Conexión: USB 2.0 o superior
+     * Modo teclado (keyboard wedge)
+
+5.5 Software de Sistema Requerido
+   - Microsoft .NET Framework 4.8 o superior
+   - Visual C++ Redistributable 2015-2022 (x64)
+     * Requerido por pyodbc para funciones nativas
+   - Windows Management Framework 5.1 o superior
+
+
+6. PROCESO DE INSTALACIÓN
+--------------------------
+
+6.1 Instalación en Entorno de Desarrollo
+
+Paso 1: Instalar Python
+   - Descargar Python 3.14.0 desde https://www.python.org/
+   - Ejecutar instalador
+   - Marcar opción "Add Python to PATH"
+   - Verificar instalación: python --version
+
+Paso 2: Instalar SQL Server Express
+   - Descargar desde Microsoft
+   - Instalar instancia SQLEXPRESS
+   - Habilitar SQL Server Browser
+   - Configurar autenticación de Windows
+
+Paso 3: Instalar ODBC Driver 18
+   - Descargar desde Microsoft
+   - Ejecutar instalador msodbcsql.msi
+   - Verificar instalación en ODBC Data Sources
+
+Paso 4: Configurar Proyecto
+   - Clonar repositorio: git clone [URL]
+   - Navegar al directorio del proyecto
+   - Instalar dependencias: pip install -r requirements.txt
+
+Paso 5: Ejecutar Aplicación
+   - Primera ejecución: python main.py
+   - Configurar conexión a base de datos
+   - El sistema creará las tablas automáticamente
+   - Usuario administrador por defecto: admin / admin123
+
+6.2 Instalación de Ejecutable Standalone
+
+Paso 1: Generar Ejecutable (en desarrollo)
+   - Ejecutar: python build_exe.py
+   - El archivo SistemaVentasSJG.exe se generará en carpeta dist/
+
+Paso 2: Desplegar en Producción
+   - Copiar SistemaVentasSJG.exe al equipo destino
+   - Asegurar que SQL Server esté instalado y ejecutándose
+   - Asegurar que ODBC Driver 18 esté instalado
+   - Ejecutar el .exe
+   - Primera vez: configurar conexión a base de datos
+
+6.3 Configuración Inicial
+   - Al primer inicio, el sistema abre diálogo de configuración
+   - Ingresar datos de conexión SQL Server
+   - El sistema verifica conectividad
+   - Se crean automáticamente las tablas si no existen
+   - Se crea usuario administrador por defecto
+
+
+7. DEPENDENCIAS Y VERSIONES
+----------------------------
+
+Librería          Versión Mínima    Propósito
+---------         --------------    ---------
+flet              0.25.0            Framework de interfaz gráfica
+pyodbc            5.2.0             Conectividad con SQL Server
+bcrypt            4.2.1             Hash de contraseñas
+pyinstaller       6.16.0            Generación de ejecutable
+
+
+8. ARQUITECTURA DE LA APLICACIÓN
+---------------------------------
+
+8.1 Patrón de Diseño
+   - Arquitectura modular por capas
+   - Separación de responsabilidades
+   - Capa de presentación: main.py, app/pages/
+   - Capa de lógica de negocio: app/*.py
+   - Capa de acceso a datos: app/database.py
+
+8.2 Estructura de Directorios
+   /
+   ├── main.py                    # Punto de entrada principal
+   ├── requirements.txt           # Dependencias del proyecto
+   ├── build_exe.py              # Script para generar ejecutable
+   ├── seed_productos.py         # Script de datos de prueba
+   ├── connection_data.json      # Configuración de BD (generado)
+   ├── app/
+   │   ├── __init__.py
+   │   ├── auth.py               # Autenticación y autorización
+   │   ├── database.py           # Gestión de base de datos
+   │   ├── database_config_dialog.py  # Configuración de conexión
+   │   ├── login_window.py       # Ventana de login
+   │   ├── main_window.py        # Ventana principal
+   │   ├── products.py           # Gestión de productos
+   │   ├── sales_logic.py        # Lógica de ventas
+   │   ├── dashboard_logic.py    # Métricas y dashboard
+   │   └── pages/
+   │       ├── __init__.py
+   │       ├── dashboard_page.py      # Página de dashboard
+   │       ├── products_page.py       # Gestión de productos
+   │       ├── sales_page.py          # Punto de venta
+   │       ├── caja_page.py           # Control de caja
+   │       ├── reports_page.py        # Reportes mensuales
+   │       ├── expenses_page.py       # Gestión de gastos
+   │       ├── users_page.py          # Gestión de usuarios
+   │       ├── metodos_pago_page.py   # Métodos de pago
+   │       └── setup_window.py        # Configuración inicial
+   └── dist/                     # Ejecutable generado (producción)
+
+
+9. CONSIDERACIONES DE SEGURIDAD
+--------------------------------
+
+9.1 Autenticación
+   - Contraseñas hasheadas con bcrypt (12 rounds)
+   - No se almacenan contraseñas en texto plano
+   - Validación de credenciales en cada login
+
+9.2 Autorización
+   - Sistema de roles: Administrador y Cajero
+   - Restricciones de acceso por rol
+   - Administrador: acceso completo
+   - Cajero: acceso limitado (ventas y caja)
+
+9.3 Base de Datos
+   - Conexiones encriptadas (TrustServerCertificate)
+   - Autenticación de Windows (sin credenciales en código)
+   - Transacciones ACID para integridad de datos
+   - Sin inyección SQL (uso de parámetros preparados)
+
+9.4 Datos Sensibles
+   - Configuración de BD en archivo JSON local
+   - No se exponen credenciales en logs
+   - Sesión de usuario activa durante ejecución
+
+
+10. FUNCIONALIDADES DEL SISTEMA
+--------------------------------
+
+10.1 Módulo de Autenticación
+   - Login de usuarios
+   - Validación de credenciales
+   - Control de roles y permisos
+
+10.2 Módulo de Productos
+   - Alta, baja y modificación de productos
+   - Gestión de categorías
+   - Control de stock
+   - Soporte para código de barras
+
+10.3 Módulo de Ventas
+   - Punto de venta con interfaz intuitiva
+   - Escaneo de código de barras
+   - Búsqueda de productos
+   - Carrito de compras
+   - Múltiples métodos de pago
+   - Impresión de tickets (futuro)
+
+10.4 Módulo de Caja
+   - Apertura y cierre de caja diaria
+   - Registro de gastos
+   - Historial de cierres
+   - Balance neto (ventas - gastos)
+
+10.5 Módulo de Reportes
+   - Dashboard con métricas en tiempo real
+   - Reportes mensuales con acordeón expandible
+   - Detalle de productos vendidos por día
+   - Filtros por rango de fechas
+   - Top 5 productos más vendidos
+
+10.6 Módulo de Administración
+   - Gestión de usuarios
+   - Gestión de métodos de pago
+   - Configuración de base de datos
+   - Respaldo y restauración (manual)
+
+
+11. NOTAS TÉCNICAS ADICIONALES
+-------------------------------
+
+11.1 Compatibilidad
+   - Aplicación diseñada para Windows exclusivamente
+   - No compatible con Linux/Mac sin modificaciones
+   - Flet soporta multiplataforma, pero depende de SQL Server
+
+11.2 Rendimiento
+   - Optimizado para hasta 10,000 productos
+   - Transacciones rápidas (< 1 segundo)
+   - Interfaz reactiva sin bloqueos
+   - Consultas con índices en columnas clave
+
+11.3 Escalabilidad
+   - Arquitectura permite migrar a SQL Server estándar
+   - Posibilidad de implementar servidor centralizado
+   - Frontend permite múltiples instancias
+   - Base de datos soporta hasta 10 GB (Express)
+
+11.4 Mantenimiento
+   - Código modular y documentado
+   - Logs de sistema para debugging
+   - Sin dependencias obsoletas
+   - Fácil actualización de componentes

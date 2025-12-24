@@ -179,6 +179,50 @@ def test_connection(server, database, username=None, password=None, trusted=True
     finally:
         if conn: conn.close() # Cierra la conexión de prueba
 
+def drop_database():
+    """
+    Elimina completamente la base de datos del sistema.
+    ADVERTENCIA: Esta operación es IRREVERSIBLE.
+    Solo debe ser usada por desarrolladores para resetear el sistema.
+    """
+    print(f"🔴 --- INICIANDO ELIMINACIÓN DE BD '{_DATABASE}' ---")
+    conn_master = None
+    try:
+        # Conectar a master para poder eliminar la BD
+        conn_master = get_connection('master')
+        if not conn_master:
+            return False, "No se pudo conectar a 'master' para eliminar la base de datos."
+        
+        conn_master.autocommit = True
+        cursor = conn_master.cursor()
+        
+        # Verificar si la BD existe
+        cursor.execute("SELECT COUNT(*) FROM sys.databases WHERE name = ?", (_DATABASE,))
+        if cursor.fetchone()[0] == 0:
+            print(f"ℹ️  La BD '{_DATABASE}' no existe.")
+            return True, "La base de datos no existe."
+        
+        # Cerrar todas las conexiones activas a la BD antes de eliminarla
+        print(f"⚠️ Cerrando conexiones activas a '{_DATABASE}'...")
+        cursor.execute(f"""
+            ALTER DATABASE [{_DATABASE}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        """)
+        
+        # Eliminar la base de datos
+        print(f"🔴 Eliminando BD '{_DATABASE}'...")
+        cursor.execute(f"DROP DATABASE [{_DATABASE}]")
+        
+        print(f"✅ BD '{_DATABASE}' eliminada exitosamente.")
+        return True, f"Base de datos '{_DATABASE}' eliminada correctamente."
+        
+    except Exception as e:
+        error_msg = f"Error al eliminar base de datos: {e}"
+        print(f"❌ {error_msg}")
+        return False, error_msg
+    finally:
+        if conn_master:
+            conn_master.close()
+
 # Bloque de prueba (si ejecutas python app/database.py)
 # Ya no es tan útil porque depende de set_connection_parameters
 # if __name__ == '__main__': ...

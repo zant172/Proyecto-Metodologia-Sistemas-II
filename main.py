@@ -5,7 +5,7 @@ Toda la lógica del sistema adaptada a Flet Framework
 import flet as ft
 import json
 import os
-from app.database import set_connection_parameters, initialize_database_schema, test_connection
+from app.database import set_connection_parameters, initialize_database_schema, test_connection, drop_database
 from app.auth import (login_user, get_all_users, create_user, update_user, delete_user, get_all_roles, 
                       ensure_superadmin_exists, is_initial_setup_complete, mark_setup_complete, 
                       create_default_categories)
@@ -15,7 +15,8 @@ from app.dashboard_logic import (get_dashboard_metrics, get_employee_metrics, ge
 from app.products import (get_all_products, create_product, update_product, delete_product, 
                           get_all_categories, search_products, get_product_by_id)
 from app.caja_logic import (get_caja_activa, abrir_caja, pausar_caja, reanudar_caja, 
-                            cerrar_caja, get_resumen_caja_activa, get_historial_cajas)
+                            cerrar_caja, get_resumen_caja_activa, get_historial_cajas,
+                            get_ventas_de_caja, get_detalle_venta)
 from app.gastos import get_all_gastos, create_gasto, update_gasto, delete_gasto
 from app.metodos_pago import get_all_metodos_pago, create_metodo_pago, update_metodo_pago, delete_metodo_pago
 from app.reportes import get_ventas_por_fecha, get_gastos_por_fecha, get_resumen_financiero, get_ventas_por_metodo_pago
@@ -720,6 +721,11 @@ class SistemaGestionApp:
                                 ft.Text("SJG Solutions", size=11, color="#FFFFFF99"),
                             ], spacing=0),
                         ]),
+                        # Solo desarrolladores pueden hacer clic en el logo para resetear
+                        on_click=self.logo_click_handler if self.user_data.get('rol') == 'Dev' else None,
+                        ink=True if self.user_data.get('rol') == 'Dev' else False,
+                        tooltip="🔴 RESET SISTEMA (Solo Dev)" if self.user_data.get('rol') == 'Dev' else None,
+                        border_radius=8,
                     ),
                     ft.Container(expand=True),
                     ft.Container(
@@ -2187,6 +2193,7 @@ class SistemaGestionApp:
                 ft.DataColumn(ft.Text("Ventas", weight=ft.FontWeight.BOLD)),
                 ft.DataColumn(ft.Text("Gastos", weight=ft.FontWeight.BOLD)),
                 ft.DataColumn(ft.Text("Balance", weight=ft.FontWeight.BOLD)),
+                ft.DataColumn(ft.Text("Acciones", weight=ft.FontWeight.BOLD)),
             ], rows=[])
             
             for caja_hist in historial:
@@ -2194,6 +2201,7 @@ class SistemaGestionApp:
                 fecha = caja_hist[1].strftime("%Y-%m-%d") if caja_hist[1] else ""
                 balance_val = float(caja_hist[10]) if caja_hist[10] else 0.0
                 balance_color = self.colors["success"] if balance_val >= 0 else self.colors["danger"]
+                id_caja = caja_hist[0]  # idCaja
                 
                 historial_table.rows.append(ft.DataRow(cells=[
                     ft.DataCell(ft.Text(fecha)),
@@ -2202,6 +2210,12 @@ class SistemaGestionApp:
                     ft.DataCell(ft.Text(f"${float(caja_hist[8] or 0):,.2f}")),  # TotalVentas
                     ft.DataCell(ft.Text(f"${float(caja_hist[9] or 0):,.2f}")),  # TotalGastos
                     ft.DataCell(ft.Text(f"${balance_val:,.2f}", color=balance_color)),
+                    ft.DataCell(ft.IconButton(
+                        icon=ft.Icons.VISIBILITY,
+                        icon_color=self.colors["primary"],
+                        tooltip="Ver detalles de la caja",
+                        on_click=lambda e, caja_id=id_caja, fecha_caja=fecha: self.ver_detalles_caja(caja_id, fecha_caja)
+                    )),
                 ]))
             
             content_parts.append(ft.Container(
@@ -2316,6 +2330,130 @@ class SistemaGestionApp:
         )
         self.overlay_dialog = ft.Container(content=dialog_content, alignment=ft.alignment.center,
             bgcolor=ft.Colors.with_opacity(0.5, ft.Colors.BLACK), expand=True)
+        self.page.overlay.append(self.overlay_dialog)
+        self.page.update()
+
+    def ver_detalles_caja(self, id_caja, fecha_caja):
+        """Muestra una ventana modal con las ventas y productos de una caja específica"""
+        def close_overlay(e=None):
+            if hasattr(self, 'overlay_dialog') and self.overlay_dialog in self.page.overlay:
+                self.page.overlay.remove(self.overlay_dialog)
+                self.page.update()
+        
+        # Obtener las ventas de esta caja
+        ventas, err_ventas = get_ventas_de_caja(id_caja)
+        
+        if err_ventas:
+            self.show_snackbar(f"❌ Error al obtener ventas: {err_ventas}", error=True)
+            return
+        
+        if not ventas:
+            self.show_snackbar("ℹ️ Esta caja no tiene ventas registradas", error=False)
+            return
+        
+        # Crear una lista de expansión panels, uno por cada venta
+        ventas_panels = []
+        
+        for venta in ventas:
+            # venta: (idVenta, FechaVenta, Usuario, Total, MetodoPago)
+            id_venta = venta[0]
+            fecha_venta = venta[1].strftime("%Y-%m-%d %H:%M:%S") if venta[1] else ""
+            usuario = venta[2] or "N/A"
+            total = float(venta[3]) if venta[3] else 0.0
+            metodo_pago = venta[4] or "N/A"
+            
+            # Obtener el detalle de productos de esta venta
+            productos, err_productos = get_detalle_venta(id_venta)
+            
+            # Crear tabla de productos
+            if productos and not err_productos:
+                productos_table = ft.DataTable(
+                    columns=[
+                        ft.DataColumn(ft.Text("Producto", weight=ft.FontWeight.BOLD)),
+                        ft.DataColumn(ft.Text("Cantidad", weight=ft.FontWeight.BOLD)),
+                        ft.DataColumn(ft.Text("Precio Unit.", weight=ft.FontWeight.BOLD)),
+                        ft.DataColumn(ft.Text("Subtotal", weight=ft.FontWeight.BOLD)),
+                    ],
+                    rows=[]
+                )
+                
+                for prod in productos:
+                    # prod: (NombreProducto, Cantidad, PrecioUnitario, Subtotal)
+                    productos_table.rows.append(ft.DataRow(cells=[
+                        ft.DataCell(ft.Text(prod[0] or "N/A")),
+                        ft.DataCell(ft.Text(str(prod[1] or 0))),
+                        ft.DataCell(ft.Text(f"${float(prod[2] or 0):,.2f}")),
+                        ft.DataCell(ft.Text(f"${float(prod[3] or 0):,.2f}")),
+                    ]))
+                
+                productos_content = ft.Container(
+                    content=ft.Column([productos_table], scroll=ft.ScrollMode.AUTO),
+                    padding=10,
+                    bgcolor=ft.Colors.with_opacity(0.05, ft.Colors.BLACK),
+                    border_radius=5
+                )
+            else:
+                productos_content = ft.Text("No se encontraron productos", 
+                                          color=self.colors["text_secondary"], 
+                                          italic=True)
+            
+            # Crear el panel expansible para esta venta
+            venta_panel = ft.ExpansionPanel(
+                header=ft.ListTile(
+                    title=ft.Text(f"Venta #{id_venta} - {fecha_venta}", weight=ft.FontWeight.BOLD),
+                    subtitle=ft.Text(f"Usuario: {usuario} | Método: {metodo_pago} | Total: ${total:,.2f}"),
+                ),
+                content=ft.Container(
+                    content=productos_content,
+                    padding=ft.padding.only(left=15, right=15, bottom=15)
+                ),
+                can_tap_header=True,
+            )
+            
+            ventas_panels.append(venta_panel)
+        
+        # Crear el panel de expansión
+        expansion_panel_list = ft.ExpansionPanelList(
+            controls=ventas_panels,
+            expand_icon_color=self.colors["primary"],
+            elevation=0,
+        )
+        
+        # Crear el contenido del diálogo
+        dialog_content = ft.Container(
+            content=ft.Column([
+                ft.Row([
+                    ft.Icon(ft.Icons.RECEIPT_LONG, color=self.colors["primary"], size=35),
+                    ft.Container(width=10),
+                    ft.Text(f"Detalles de Caja - {fecha_caja}", size=20, weight=ft.FontWeight.BOLD),
+                    ft.Container(expand=True),
+                    ft.IconButton(icon=ft.Icons.CLOSE, on_click=close_overlay, icon_size=20)
+                ]),
+                ft.Divider(height=20, color=self.colors["border"]),
+                ft.Text(f"Total de ventas: {len(ventas)}", size=16, weight=ft.FontWeight.BOLD),
+                ft.Container(height=10),
+                ft.Container(
+                    content=ft.Column([expansion_panel_list], scroll=ft.ScrollMode.AUTO),
+                    height=500,
+                    border=ft.border.all(1, self.colors["border"]),
+                    border_radius=8,
+                    padding=10,
+                ),
+            ], tight=True),
+            width=800,
+            bgcolor=self.colors["card"],
+            padding=30,
+            border_radius=12,
+            shadow=ft.BoxShadow(spread_radius=5, blur_radius=15, 
+                              color=ft.Colors.with_opacity(0.3, ft.Colors.BLACK))
+        )
+        
+        self.overlay_dialog = ft.Container(
+            content=dialog_content,
+            alignment=ft.alignment.center,
+            bgcolor=ft.Colors.with_opacity(0.5, ft.Colors.BLACK),
+            expand=True
+        )
         self.page.overlay.append(self.overlay_dialog)
         self.page.update()
 
@@ -3532,6 +3670,192 @@ class SistemaGestionApp:
     def generar_reporte_financiero(self):
         # Esta función ya no se usa, pero la dejamos por compatibilidad
         pass
+
+    def logo_click_handler(self, e):
+        """Manejador de clic en el logo - Solo para desarrolladores"""
+        if self.user_data.get('rol') != 'Dev':
+            return  # Seguridad adicional
+        
+        # Mostrar diálogo de confirmación para reset
+        self.mostrar_dialogo_reset_sistema()
+    
+    def mostrar_dialogo_reset_sistema(self):
+        """Muestra un diálogo de confirmación para resetear completamente el sistema"""
+        
+        def close_overlay(e=None):
+            if hasattr(self, 'overlay_dialog') and self.overlay_dialog in self.page.overlay:
+                self.page.overlay.remove(self.overlay_dialog)
+                self.page.update()
+        
+        # Campo de confirmación
+        confirmacion_field = ft.TextField(
+            label="Escriba 'CONFIRMAR RESET' para continuar",
+            width=500,
+            border_color=self.colors["danger"],
+        )
+        
+        def ejecutar_reset(e):
+            if confirmacion_field.value != "CONFIRMAR RESET":
+                self.show_snackbar("⚠️ Debe escribir 'CONFIRMAR RESET' exactamente", error=True)
+                return
+            
+            close_overlay()
+            self.reset_sistema_completo()
+        
+        dialog_content = ft.Container(
+            content=ft.Column([
+                ft.Row([
+                    ft.Icon(ft.Icons.WARNING_ROUNDED, color=self.colors["danger"], size=50),
+                    ft.Container(width=15),
+                    ft.Text("⚠️ RESETEAR SISTEMA COMPLETO", 
+                           size=22, 
+                           weight=ft.FontWeight.BOLD,
+                           color=self.colors["danger"]),
+                ]),
+                ft.Divider(height=30, color=self.colors["danger"]),
+                
+                ft.Text("ADVERTENCIA: Esta acción es IRREVERSIBLE", 
+                       size=18, 
+                       weight=ft.FontWeight.BOLD,
+                       color=self.colors["danger"]),
+                
+                ft.Container(height=15),
+                
+                ft.Text("Esta operación eliminará:", size=16, weight=ft.FontWeight.BOLD),
+                ft.Column([
+                    ft.Row([ft.Icon(ft.Icons.CIRCLE, size=8, color=self.colors["danger"]), 
+                           ft.Text("  Toda la base de datos de SQL Server", size=15)]),
+                    ft.Row([ft.Icon(ft.Icons.CIRCLE, size=8, color=self.colors["danger"]), 
+                           ft.Text("  Todas las ventas, productos y usuarios", size=15)]),
+                    ft.Row([ft.Icon(ft.Icons.CIRCLE, size=8, color=self.colors["danger"]), 
+                           ft.Text("  El archivo de configuración (connection_data.json)", size=15)]),
+                    ft.Row([ft.Icon(ft.Icons.CIRCLE, size=8, color=self.colors["danger"]), 
+                           ft.Text("  TODO el historial del negocio", size=15)]),
+                ], spacing=8),
+                
+                ft.Container(height=20),
+                
+                ft.Text("El sistema volverá al estado inicial de configuración.", 
+                       size=14, 
+                       color=self.colors["text_secondary"],
+                       italic=True),
+                
+                ft.Container(height=25),
+                
+                confirmacion_field,
+                
+                ft.Container(height=25),
+                
+                ft.Row([
+                    ft.TextButton("Cancelar", on_click=close_overlay),
+                    ft.Container(expand=True),
+                    ft.ElevatedButton(
+                        "🔴 RESETEAR SISTEMA",
+                        on_click=ejecutar_reset,
+                        bgcolor=self.colors["danger"],
+                        color="white",
+                        icon=ft.Icons.DELETE_FOREVER
+                    )
+                ], alignment=ft.MainAxisAlignment.END)
+            ], tight=True, scroll=ft.ScrollMode.AUTO),
+            width=650,
+            bgcolor=self.colors["card"],
+            padding=35,
+            border_radius=12,
+            border=ft.border.all(3, self.colors["danger"]),
+            shadow=ft.BoxShadow(
+                spread_radius=5, 
+                blur_radius=20, 
+                color=ft.Colors.with_opacity(0.5, ft.Colors.RED)
+            )
+        )
+        
+        self.overlay_dialog = ft.Container(
+            content=dialog_content,
+            alignment=ft.alignment.center,
+            bgcolor=ft.Colors.with_opacity(0.7, ft.Colors.BLACK),
+            expand=True
+        )
+        self.page.overlay.append(self.overlay_dialog)
+        self.page.update()
+    
+    def reset_sistema_completo(self):
+        """Ejecuta el reset completo del sistema: elimina BD y archivo de configuración"""
+        import os
+        
+        # Mostrar progreso
+        progress_dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("🔄 Reseteando sistema...", size=18),
+            content=ft.Column([
+                ft.ProgressRing(),
+                ft.Container(height=15),
+                ft.Text("Por favor espere...", size=14)
+            ], tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+        )
+        self.page.dialog = progress_dialog
+        progress_dialog.open = True
+        self.page.update()
+        
+        try:
+            # 1. Eliminar la base de datos
+            success_db, msg_db = drop_database()
+            if not success_db:
+                raise Exception(f"Error al eliminar BD: {msg_db}")
+            
+            # 2. Eliminar el archivo de configuración
+            if os.path.exists(CONNECTION_FILE):
+                os.remove(CONNECTION_FILE)
+                print(f"✅ Archivo {CONNECTION_FILE} eliminado.")
+            
+            # Cerrar el diálogo de progreso
+            progress_dialog.open = False
+            self.page.update()
+            
+            # Mostrar mensaje de éxito
+            success_dialog = ft.AlertDialog(
+                modal=True,
+                title=ft.Row([
+                    ft.Icon(ft.Icons.CHECK_CIRCLE, color=self.colors["success"], size=35),
+                    ft.Text("  Sistema Reseteado", size=20)
+                ]),
+                content=ft.Column([
+                    ft.Text("El sistema ha sido reseteado completamente.", size=16),
+                    ft.Container(height=10),
+                    ft.Text("La aplicación se cerrará. Vuelva a iniciarla para configurar desde cero.",
+                           size=14, color=self.colors["text_secondary"])
+                ], tight=True),
+                actions=[
+                    ft.TextButton("Cerrar Aplicación", 
+                                 on_click=lambda _: self.page.window_destroy())
+                ],
+            )
+            self.page.dialog = success_dialog
+            success_dialog.open = True
+            self.page.update()
+            
+        except Exception as e:
+            # Cerrar el diálogo de progreso
+            progress_dialog.open = False
+            self.page.update()
+            
+            # Mostrar error
+            error_dialog = ft.AlertDialog(
+                modal=True,
+                title=ft.Row([
+                    ft.Icon(ft.Icons.ERROR, color=self.colors["danger"], size=35),
+                    ft.Text("  Error al resetear", size=20)
+                ]),
+                content=ft.Text(f"Error: {str(e)}", size=14),
+                actions=[
+                    ft.TextButton("Cerrar", on_click=lambda _: setattr(error_dialog, 'open', False) or self.page.update())
+                ],
+            )
+            self.page.dialog = error_dialog
+            error_dialog.open = True
+            self.page.update()
+            
+            print(f"❌ Error durante reset: {e}")
 
     def logout(self):
         self.user_data = None; self.current_view = None; self.show_login()
