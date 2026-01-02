@@ -64,8 +64,15 @@ def get_all_categories():
 
 def create_product(codigo, nombre, cat_id, precio, stock, codigo_barra=None):
     # Validaciones de negocio
-    if not codigo or not nombre:
-        return False, "El código y nombre son obligatorios."
+    if not nombre:
+        return False, "El nombre es obligatorio."
+    
+    # Si no hay código, generar uno automático
+    if not codigo:
+        import time
+        import random
+        codigo = f"AUTO-{int(time.time())}-{random.randint(1000, 9999)}"
+    
     if precio < 0:
         return False, "El precio no puede ser negativo."
     if stock < 0:
@@ -87,7 +94,7 @@ def create_product(codigo, nombre, cat_id, precio, stock, codigo_barra=None):
 
 def update_product(product_id, codigo, nombre, cat_id, precio, stock, codigo_barra=None):
     # Validaciones de negocio
-    if not codigo or not nombre:
+    if not nombre:
         return False, "El código y nombre son obligatorios."
     if precio < 0:
         return False, "El precio no puede ser negativo."

@@ -1032,18 +1032,11 @@ class SistemaGestionApp:
         # Recargar configuración para asegurar que esté actualizada
         from app.auth import get_configuracion
         self.config = get_configuracion()
-        print(f"🔧 Config recargada en show_productos: {self.config}")
-        
         productos, error = get_all_products()
-        print(f"   Productos obtenidos: {len(productos) if productos else 0}")
         if error:
-            print(f"   Error: {error}")
+            print(f"❌ Error al obtener productos: {error}")
             self.show_snackbar(f"❌ Error: {error}", error=True)
             productos = []
-        
-        # Obtener categorías
-        categorias, err_cat = get_all_categories()
-        categorias_list = categorias if not err_cat and categorias else []
         
         search_field = ft.TextField(
             label="Buscar producto",
@@ -1056,11 +1049,19 @@ class SistemaGestionApp:
             focused_border_color=self.colors["primary"],
         )
         
-        # Dropdown para filtrar por categoría
-        categoria_options = [ft.dropdown.Option(key="TODAS", text="Todas las Categorías")]
-        for cat in categorias_list:
-            cat_nombre = cat[1] if isinstance(cat, tuple) else cat
-            categoria_options.append(ft.dropdown.Option(key=cat_nombre, text=cat_nombre))
+        # Dropdown para filtrar por categoría - extraer categorías DIRECTAMENTE de los productos
+        categoria_options = [ft.dropdown.Option("TODAS", "Todas las Categorías")]
+        if productos:
+            # Extraer categorías únicas de los productos (prod[3] es la categoría)
+            categorias_unicas = set()
+            for prod in productos:
+                # prod[3] es NombreCategoria
+                cat_nombre = str(prod[3]).strip()
+                categorias_unicas.add(cat_nombre)
+            
+            # Agregar cada categoría al dropdown
+            for cat_nombre in sorted(categorias_unicas):
+                categoria_options.append(ft.dropdown.Option(cat_nombre, cat_nombre))
         
         self.categoria_filter = ft.Dropdown(
             label="Categoría",
@@ -1190,22 +1191,20 @@ class SistemaGestionApp:
                 # Crear funciones específicas para este producto
                 def make_edit_handler(product):
                     def handler(e):
-                        print(f"🔧 Editando producto {product[0]}")
                         self.edit_producto_dialog(product)
                     return handler
                 
                 def make_delete_handler(product):
                     def handler(e):
-                        print(f"🗑 Eliminando producto {product[0]}")
                         self.delete_producto_confirm(product)
                     return handler
                 
                 # Construir fila de producto
                 product_row = [
-                    ft.Text(prod[1], width=100, size=14),
-                    ft.Text(prod[2], width=180, size=14, weight=ft.FontWeight.W_500),
+                    ft.Text(str(prod[1]), width=100, size=14),
+                    ft.Text(str(prod[2]), width=180, size=14, weight=ft.FontWeight.W_500),
                     ft.Container(
-                        content=ft.Text(prod[3], size=12, color=self.colors["primary"]),
+                        content=ft.Text(str(prod[3]), size=12, color=self.colors["primary"]),
                         bgcolor=self.colors["primary_light"] + "20",
                         padding=ft.padding.symmetric(horizontal=10, vertical=5),
                         border_radius=8,
@@ -1274,8 +1273,6 @@ class SistemaGestionApp:
                         on_hover=lambda e: setattr(e.control, 'bgcolor', self.colors["bg"] if e.data == "true" else None) or self.page.update(),
                     )
                 )
-        
-        print(f"✅ Lista de productos renderizada: {len(self.productos_list.controls)} items")
     
     def filter_productos(self, search_term, categoria=None):
         """Filtra productos por término de búsqueda y/o categoría"""
@@ -1283,7 +1280,8 @@ class SistemaGestionApp:
         
         # Filtrar por categoría si no es "TODAS"
         if categoria and categoria != "TODAS":
-            filtered = [p for p in filtered if p[3] == categoria]  # p[3] es la categoría
+            # prod[3] es el nombre de la categoría (string)
+            filtered = [p for p in filtered if str(p[3]).strip() == str(categoria).strip()]
         
         # Filtrar por término de búsqueda
         if search_term:
@@ -1293,16 +1291,12 @@ class SistemaGestionApp:
         
         self.populate_productos_list(filtered)
         self.page.update()
-        self.page.update()
 
     def new_producto_dialog(self):
-        print("🔨 Abriendo diálogo nuevo producto")
-        
         # Cargar configuración si no está disponible
         if not self.config:
             from app.auth import get_configuracion
             self.config = get_configuracion()
-            print(f"🔧 Configuración cargada: {self.config}")
         
         categorias, _ = get_all_categories()
         
@@ -1324,8 +1318,6 @@ class SistemaGestionApp:
         usar_codigo_barra_checkbox = None
         codigo_barra_field = None
         codigo_barra_container = None
-        
-        print(f"📊 ¿Sistema usa códigos de barra? {usar_codigos_sistema}")
         
         if usar_codigos_sistema:
             # Checkbox para activar código de barra en este producto
@@ -1372,19 +1364,15 @@ class SistemaGestionApp:
         
         def validate_and_save(e):
             nombre = nombre_field.value.strip() if nombre_field.value else ""
+            codigo = codigo_field.value.strip() if codigo_field.value else ""
             
-            # Si usa código de barra, auto-generar código interno
-            if usar_codigo_barra_checkbox and usar_codigo_barra_checkbox.value:
-                import time
-                codigo = f"AUTO-{int(time.time())}"
-            else:
-                codigo = codigo_field.value.strip() if codigo_field.value else ""
-            
-            if not codigo or not nombre or not cat_dropdown.value:
+            # Validar solo campos obligatorios (nombre y categoría)
+            if not nombre or not cat_dropdown.value:
                 self.show_snackbar("⚠️ Complete todos los campos requeridos (*)", error=True)
                 return
             
-            if len(codigo) > 50:
+            # Validar longitudes si hay valores
+            if codigo and len(codigo) > 50:
                 self.show_snackbar("⚠️ El código no puede exceder 50 caracteres", error=True)
                 return
             
@@ -1392,8 +1380,13 @@ class SistemaGestionApp:
                 self.show_snackbar("⚠️ El nombre no puede exceder 200 caracteres", error=True)
                 return
             
-            if any(char in codigo + nombre for char in ["'", '"', ";", "--", "/*", "*/"]):
-                self.show_snackbar("⚠️ El código y nombre no pueden contener comillas, punto y coma o caracteres SQL", error=True)
+            # Validar caracteres especiales
+            if any(char in nombre for char in ["'", '"', ";", "--", "/*", "*/"]):
+                self.show_snackbar("⚠️ El nombre no puede contener comillas, punto y coma o caracteres SQL", error=True)
+                return
+            
+            if codigo and any(char in codigo for char in ["'", '"', ";", "--", "/*", "*/"]):
+                self.show_snackbar("⚠️ El código no puede contener comillas, punto y coma o caracteres SQL", error=True)
                 return
             
             # Validar código de barra si está habilitado
@@ -1420,11 +1413,9 @@ class SistemaGestionApp:
                     self.show_snackbar("⚠️ El stock no puede ser negativo", error=True)
                     return
                 
-                print(f"📝 Creando producto: codigo={codigo}, nombre={nombre}, cat={cat_dropdown.value}, precio={precio_val}, stock={stock_val}, codigo_barra={codigo_barra_val}")
                 success, msg = create_product(codigo, nombre,
                     int(cat_dropdown.value) if cat_dropdown.value else None,
                     precio_val, stock_val, codigo_barra_val)
-                print(f"   Resultado: success={success}, msg={msg}")
                 
                 if success:
                     self.show_snackbar(f"✅ {msg}")
@@ -3803,10 +3794,15 @@ class SistemaGestionApp:
             if not success_db:
                 raise Exception(f"Error al eliminar BD: {msg_db}")
             
-            # 2. Eliminar el archivo de configuración
+            # 2. Eliminar el archivo de configuración JSON
             if os.path.exists(CONNECTION_FILE):
                 os.remove(CONNECTION_FILE)
                 print(f"✅ Archivo {CONNECTION_FILE} eliminado.")
+            
+            # 3. Resetear variables globales
+            self.user_data = None
+            self.current_view = None
+            self.config = None
             
             # Cerrar el diálogo de progreso
             progress_dialog.open = False
@@ -3822,12 +3818,12 @@ class SistemaGestionApp:
                 content=ft.Column([
                     ft.Text("El sistema ha sido reseteado completamente.", size=16),
                     ft.Container(height=10),
-                    ft.Text("La aplicación se cerrará. Vuelva a iniciarla para configurar desde cero.",
+                    ft.Text("Será redirigido al wizard de configuración inicial.",
                            size=14, color=self.colors["text_secondary"])
                 ], tight=True),
                 actions=[
-                    ft.TextButton("Cerrar Aplicación", 
-                                 on_click=lambda _: self.page.window_destroy())
+                    ft.TextButton("Continuar", 
+                                 on_click=lambda _: self.cerrar_dialogo_y_reiniciar())
                 ],
             )
             self.page.dialog = success_dialog
@@ -3856,9 +3852,18 @@ class SistemaGestionApp:
             self.page.update()
             
             print(f"❌ Error durante reset: {e}")
+    
+    def cerrar_dialogo_y_reiniciar(self):
+        """Cierra el diálogo actual y vuelve al wizard de configuración"""
+        if self.page.dialog:
+            self.page.dialog.open = False
+            self.page.update()
+        
+        # Volver al wizard de configuración inicial
+        print("🔄 Volviendo al wizard de configuración...")
+        self.show_setup_wizard()
 
-    def logout(self):
-        self.user_data = None; self.current_view = None; self.show_login()
+    def build_reportes_mensuales_view(self):
         """Construye la vista de reportes mensuales con cierres agrupados"""
         from app.caja_logic import get_historial_cierres
         
